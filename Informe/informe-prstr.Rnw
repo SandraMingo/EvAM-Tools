@@ -12,9 +12,7 @@
 \usepackage[sorting=none, url=false, backend=bibtex]{biblatex}
 \addbibresource{bibliography.bib}
 
-<<biber, eval= TRUE, include= FALSE, cache= FALSE, echo= FALSE>>=
-system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
-@  
+\newcommand{\code}[1]{\texttt{#1}}
 
 <<setup,include=FALSE,cache=FALSE>>=
 require(knitr)
@@ -33,10 +31,24 @@ opts_knit$set(stop_on_error = 2L)
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Modelan la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}.
 
 
-
 \section{Comparación de implementaciones entre R y Python}
 
 \subsection{Funcionalidad}
+El módulo \code{mhn} de Python ...
+
+El paquete de \code{evamtools} de R cuenta con 10 funciones exportadas:
+\begin{itemize}
+\item \code{evam}:
+\item \code{every\_which\_way\_data}:
+\item \code{ex\_mixed\_and\_or\_xor}:
+\item \code{examples\_csd}:
+\item \code{plot\_CPMs}:
+\item \code{plot\_evam}:
+\item \code{random\_evam}:
+\item \code{runShiny}:
+\item \code{sample\_CMPs}:
+\item \code{sample\_evam}:
+\end{itemize}
 
 \subsection{Velocidad}
 
