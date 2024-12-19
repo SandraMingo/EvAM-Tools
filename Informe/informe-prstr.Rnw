@@ -1,0 +1,52 @@
+%% ;;; -*- mode: Rnw; -*-
+\documentclass[nochap]{config/ejercicios}
+
+\title{Mutual Hazard Networks con Evamtools y Python - Grupo 6}
+\author{Tania Gonzalo Santana \\ Claudia Guerrero Rodríguez \\ Sandra Mingo Ramírez \\ Daniel Parra Gutiérrez }
+\date{2024/25}
+
+\usepackage[all]{nowidow}
+\usepackage{listing}
+\usepackage{color}
+\usepackage{tabularx}
+\usepackage[sorting=none, url=false, backend=bibtex]{biblatex}
+\addbibresource{bibliography.bib}
+
+<<biber, eval= TRUE, include= FALSE, cache= FALSE, echo= FALSE>>=
+system (paste ("biber", sub ("\\.Rnw$", "", current_input())))
+@  
+
+<<setup,include=FALSE,cache=FALSE>>=
+require(knitr)
+opts_knit$set(concordance = TRUE)
+opts_knit$set(stop_on_error = 2L)
+@
+
+\begin{document}
+\maketitle
+
+\tableofcontents
+
+\newpage 
+
+\section{Introducción a Mutual Hazard Networks}
+Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Modelan la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}.
+
+
+
+\section{Comparación de implementaciones entre R y Python}
+
+\subsection{Funcionalidad}
+
+\subsection{Velocidad}
+
+\subsection{Ventajas y desventajas}
+
+\section{Integración del código en Python con evamtools}
+
+\section{Modificar evamtools para incluir la corrección del sesgo}
+
+\printbibliography
+
+
+\end{document}

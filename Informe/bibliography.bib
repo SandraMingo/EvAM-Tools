@@ -1,0 +1,48 @@
+@misc{PictureGuide,
+  doi = {10.48550/ARXIV.2312.06824},
+  url = {https://arxiv.org/abs/2312.06824},
+  author = {Diaz-Uriarte,  Ramon and Johnston,  Iain G.},
+  keywords = {Populations and Evolution (q-bio.PE),  Quantitative Methods (q-bio.QM),  FOS: Biological sciences,  FOS: Biological sciences},
+  title = {A picture guide to cancer progression and monotonic accumulation models: evolutionary assumptions,  plausible interpretations,  and alternative uses},
+  publisher = {arXiv},
+  year = {2023},
+  copyright = {Creative Commons Attribution Share Alike 4.0 International}
+}
+
+@article{ModellingCancerProgression,
+    author = {Schill, Rudolf and Solbrig, Stefan and Wettig, Tilo and Spang, Rainer},
+    title = {Modelling cancer progression using Mutual Hazard Networks},
+    journal = {Bioinformatics},
+    volume = {36},
+    number = {1},
+    pages = {241-249},
+    year = {2019},
+    month = {06},
+    abstract = {Cancer progresses by accumulating genomic events, such as mutations and copy number alterations, whose chronological order is key to understanding the disease but difficult to observe. Instead, cancer progression models use co-occurrence patterns in cross-sectional data to infer epistatic interactions between events and thereby uncover their most likely order of occurrence. State-of-the-art progression models, however, are limited by mathematical tractability and only allow events to interact in directed acyclic graphs, to promote but not inhibit subsequent events, or to be mutually exclusive in distinct groups that cannot overlap.Here we propose Mutual Hazard Networks (MHN), a new Machine Learning algorithm to infer cyclic progression models from cross-sectional data. MHN model events by their spontaneous rate of fixation and by multiplicative effects they exert on the rates of successive events. MHN compared favourably to acyclic models in cross-validated model fit on four datasets tested. In application to the glioblastoma dataset from The Cancer Genome Atlas, MHN proposed a novel interaction in line with consecutive biopsies: IDH1 mutations are early events that promote subsequent fixation of TP53 mutations.Implementation and data are available at https://github.com/RudiSchill/MHN.Supplementary data are available at Bioinformatics online.},
+    issn = {1367-4803},
+    doi = {10.1093/bioinformatics/btz513},
+    url = {https://doi.org/10.1093/bioinformatics/btz513},
+    eprint = {https://academic.oup.com/bioinformatics/article-pdf/36/1/241/48981322/bioinformatics\_36\_1\_241.pdf},
+}
+
+@InProceedings{OvercomingObservationBias,
+author="Schill, Rudolf
+and Klever, Maren
+and L{\"o}sch, Andreas
+and Hu, Y. Linda
+and Vocht, Stefan
+and Rupp, Kevin
+and Grasedyck, Lars
+and Spang, Rainer
+and Beerenwinkel, Niko",
+editor="Ma, Jian",
+title="Overcoming Observation Bias for Cancer Progression Modeling",
+booktitle="Research in Computational Molecular Biology",
+year="2024",
+publisher="Springer Nature Switzerland",
+address="Cham",
+pages="217--234",
+abstract="Cancers evolve by accumulating genetic alterations, such as mutations and copy number changes. The chronological order of these events is important for understanding the disease, but not directly observable from cross-sectional genomic data. Cancer progression models (CPMs), such as Mutual Hazard Networks (MHNs), reconstruct the progression dynamics of tumors by learning a network of causal interactions between genetic events from their co-occurrence patterns. However, current CPMs fail to include effects of genetic events on the observation of the tumor itself and assume that observation occurs independently of all genetic events. Since a dataset contains by definition only tumors at their moment of observation, neglecting any causal effects on this event leads to the ``conditioning on a collider'' bias: Events that make the tumor more likely to be observed appear anti-correlated, which results in spurious suppressive effects or masks promoting effects among genetic events. Here, we extend MHNs by modeling effects from genetic progression events on the observation event, thereby correcting for the collider bias. We derive an efficient tensor formula for the likelihood function and learn two models on somatic mutation datasets from the MSK-IMPACT study. In colon adenocarcinoma, we find a strong effect on observation by mutations in TP53, and in lung adenocarcinoma by mutations in EGFR. Compared to classical MHNs, this explains away many spurious suppressive interactions and uncovers several promoting effects.",
+isbn="978-1-0716-3989-4"
+}
+
