@@ -1,0 +1,306 @@
+---
+title: "Trabajo_R_Tania"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-12-20"
+---
+
+# Ver todas las funciones disponibles en evamtools
+
+```{r}
+help(package = "evamtools")
+```
+
+## Función `examples_csd`
+
+La función `examples_csd` en EvaMtools proporciona ejemplos de datos de tipo **cross-sectional** (sección transversal), que puedes usar como entrada para probar las funcionalidades del paquete. Esto es útil si deseas experimentar con el paquete sin tener que preparar tus propios datos.
+
+### Componentes Principales de la Variable `examples_csd`
+
+La variable `examples_csd` incluye diferentes tipos de datos, dependiendo del modelo que quieras probar. Estos son los tres componentes principales:
+
+1. **csd**: Un conjunto de datos creado directamente, que incluye ejemplos de datos de tipo cross-sectional. Estos datos son simples y se usan para probar las funcionalidades del paquete.
+
+2. **dag**: Un conjunto de datos proveniente de modelos con **DAGs** (Directed Acyclic Graphs). Los DAGs representan relaciones causales y son útiles para modelos de redes, como los que probablemente te interesan con **MHN**.
+
+3. **matrix**: Una matriz proveniente de un modelo **MHN** (Multi-Hit Network). Esta matriz probablemente representa las transiciones entre los diferentes estados de un modelo de red MHN.
+
+
+```{r}
+# Cargar los datos de ejemplo
+data(examples_csd)
+
+# Ver la estructura de los datos de ejemplo
+str(examples_csd)
+
+# Acceder a los datos de la matriz MHN (si quieres trabajar con MHN)
+mhn_matrix <- examples_csd$matrix
+
+# Ver los datos de la matriz MHN
+print(mhn_matrix)
+```
+
+
+
+## FUNCIÓN plot_evam
+
+####Descripción
+Generar representaciones gráficas de modelos ajustados EvAM, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
+
+
+```{r}
+
+# Crear datos de ejemplo
+dB_c1 <- matrix(
+  c(
+    rep(c(1, 0, 0, 0, 0), 30),  # A
+    rep(c(0, 0, 1, 0, 0), 30),  # C
+    rep(c(1, 1, 0, 0, 0), 20),  # AB
+    rep(c(0, 0, 1, 1, 0), 20),  # CD
+    rep(c(1, 1, 1, 0, 0), 10)   # ABC
+  ),
+  ncol = 5, byrow = TRUE
+)
+colnames(dB_c1) <- LETTERS[1:5]
+
+# Ajustar el modelo EvAM
+out <- evam(dB_c1, methods = c("MHN"))
+
+# Graficar la matriz de transición
+plot_evam(out, plot_type = "trans_mat")
+
+# Graficar la matriz de tasas de transición con caminos más relevantes
+plot_evam(out, plot_type = "trans_rate_mat", top_paths = 3)
+
+```
+#Exploracion de datos simulados:
+
+```{r}
+# Verificar la clase
+class(dB_c1)
+
+dim(dB_c1)  # Ver las dimensiones
+head(dB_c1) # Ver las primeras filas
+
+# Número de observaciones (filas)
+cat("Number of observations:", nrow(dB_c1), "\n")
+
+# Número de eventos (columnas)
+cat("Number of events:", ncol(dB_c1), "\n")
+
+```
+```{r}
+# Imprimir mensaje
+cat("Event frequencies:\n")
+
+# Calcular frecuencias
+event_frequencies <- colSums(dB_c1) / nrow(dB_c1)
+
+# Imprimir frecuencias
+print(event_frequencies)
+```
+
+```{r}
+# Imprimir mensaje
+cat("Distribution of active event counts across observations:\n")
+
+# Calcular la suma por filas
+row_sums <- rowSums(dB_c1)
+
+# Contar las frecuencias de cada suma y ordenarlas
+distribution <- table(row_sums)
+
+# Mostrar la distribución ordenada
+print(distribution)
+```
+
+#Explorando funcionalidades:
+
+```{r}
+#Lo hacemos con datos simulados (más sencillo porque matriz mas pequeña)
+dB_c1
+
+# Ajustar el modelo EvAM
+out <- evam(dB_c1, methods = c("MHN"))
+
+# Explorar las opciones de métodos disponibles en la salida???? :(
+methods_used <- names(out$methods)
+print(methods_used)
+
+
+#Otra opcion:
+#str(out)
+
+#Esto te dará una idea de cómo están organizados los datos dentro del objeto y qué componentes contiene, incluyendo los métodos utilizados.
+
+```
+
+### Interpretacion del output
+
+**Contiene los resultados y configuraciones para varios modelos**, pero dado que solo ejecutamos el modelo **MHN**, los resultados más relevantes para nosotros están bajo las entradas relacionadas con **MHN** (como `MHN_theta`, `MHN_trans_rate_mat`, etc.). Los valores que aparecen como `logi NA` corresponden a modelos que no se han ejecutado. 
+Nos centramos específicamente con el modelo **MHN**. Nos interesan, por tanto, principalmente los elementos que están bajo el prefijo `MHN_` mostrados a continuación;
+
+
+**MHN_theta**
+
+Este es un array de tamaño 4x4 que contiene los parámetros de transición del modelo MHN que controlan cómo se realizan las transiciones entre los estados A, B, C, D.
+
+Valores + --> mayor probabilidad
+Valores - --> menor probabilidad
+
+```{r}
+out$MHN_theta
+```
+
+**MHN_trans_rate_mat**: Describe las tasas de transición entre estados.
+**MHN_trans_mat**: Describe las probabilidades de transición entre estados.
+**MHN_td_trans_mat**: Describe las tasas de transición temporalmente dependientes, es decir, cómo las transiciones pueden cambiar con el tiempo.
+
+```{r}
+out$MHN_trans_rate_mat
+
+out$MHN_trans_mat
+
+out$MHN_td__trans_mat #NULL ??
+
+
+```
+
+**MHN_exp_theta**
+Esta es una matriz de valores esperados calculados en el modelo MHN.
+
+```{r}
+out$MHN_exp_theta
+```
+
+**MHN_predicted_genotype_freqs**: 
+Es un vector que contiene las frecuencias genotípicas predichas bajo el modelo MHN. Este podría representar la probabilidad de cada genotipo en cada uno de los 16 estados posibles (como "WT", "A", "B", "C", etc.).
+
+```{r}
+out$MHN_predicted_genotype_freqs
+```
+
+**MHN_paths_max**: 
+
+Este valor es NA, pero probablemente representaría las trayectorias máximas o secuencias más probables de estados bajo el modelo MHN.
+
+```{r}
+out$MHN_paths_max
+
+```
+- **original_data** y **analyzed_data**: 
+  Son matrices con datos numéricos, probablemente representando la información de genotipos o secuencias de los que se parte, y los datos procesados o analizados en el contexto del modelo. Estas matrices parecen tener dimensiones de **110 x 5** y **110 x 4** respectivamente, con nombres de columnas como "A", "B", "C", "D".
+  
+- **genotype_id_ordered**: 
+  Es un vector de enteros que probablemente representa un orden de identificación de los genotipos, con nombres asociados como "WT", "A", "B", "C", etc.
+
+```{r}
+out$genotype_id_ordered
+```
+**all_options**: Esta es una lista que contiene opciones y configuraciones para varios modelos. Concretamente a nosotros nos interesa **mhn_opts**. Este contiene configuraciones específicas para el modelo MHN, como el valor de `lambda` y `omp_threads` (que indica el número de hilos para la ejecución paralela).
+
+
+```{r}
+ out$all_options$mhn_opts
+```
+
+
+
+
+```{r}
+#Otra opción:
+names(out) 
+```
+
+
+# La función evam() genera un objeto que debería contener información sobre los métodos utilizados. 
+
+```{r}
+#print(out)
+```
+
+
+
+
+
+# Demo Python:
+
+```{r}
+# Leer el archivo CSV como un data frame (como demo mhn Python)
+input_df <- read.csv('LUAD_n12.csv')
+
+# Convertir el data frame a una matriz
+input_matrix <- as.matrix(input_df) 
+##Es necesrio que sea una matriz??? En python tiene que ser un dataframe??
+
+# Verificar la clase
+class(input_matrix)
+
+```
+
+```{r}
+dim(input_matrix)  # Ver las dimensiones
+head(input_matrix) # Ver las primeras filas
+
+# Número de observaciones (filas)
+cat("Number of observations:", nrow(input_matrix), "\n")
+
+# Número de eventos (columnas)
+cat("Number of events:", ncol(input_matrix), "\n")
+
+```
+
+```{r}
+# Imprimir mensaje
+cat("Event frequencies:\n")
+
+# Calcular frecuencias
+event_frequencies <- colSums(input_matrix) / nrow(input_matrix)
+
+# Imprimir frecuencias
+print(event_frequencies)
+
+```
+
+
+```{r}
+# Imprimir mensaje
+cat("Distribution of active event counts across observations:\n")
+
+# Calcular la suma por filas
+row_sums <- rowSums(input_matrix)
+
+# Contar las frecuencias de cada suma y ordenarlas
+distribution <- table(row_sums)
+
+# Mostrar la distribución ordenada
+print(distribution)
+
+```
+
+```{r}
+# Establecer la semilla para la reproducibilidad
+set.seed(6)
+
+# Seleccionar un subconjunto aleatorio de 500 filas
+input_subset <- input_matrix[sample(1:nrow(input_matrix), size = 500, replace = FALSE), ]
+
+# Calcular la suma por filas
+row_sums <- rowSums(input_subset)
+
+# Contar las frecuencias de cada suma y ordenarlas
+distribution <- table(row_sums)
+
+# Mostrar la distribución ordenada
+print(distribution)
+
+```
+
+## Preparation for MHN training
+
+```{r}
+
+```
+
+
