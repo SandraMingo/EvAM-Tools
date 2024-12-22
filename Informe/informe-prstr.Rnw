@@ -27,23 +27,53 @@ opts_knit$set(stop_on_error = 2L)
 
 \newpage 
 
+%%%%CITAS
+%\cite{PictureGuide} -> A picture guide to cancer progression and monotonic accumulation models: evolutionary assumptions,  plausible interpretations,  and alternative uses
+%\cite{ModellingCancerProgression} -> Modelling cancer progression using Mutual Hazard Network
+%\cite{OvercomingObservationBias} -> Overcoming Observation Bias for Cancer Progression Modeling
+%\cite{Schill2024} -> Correcting for Observation Bias in Cancer Progression Modeling
+
 \section{Introducción a Mutual Hazard Networks}
-Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Modelan la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}.
+Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
+
+Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Modelan la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros. Un supuesto del modelo es que el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. No obstante, los MHN se han modificado recientemente para corregir el sesgo por observación \cite{Schill2024}. Así, el acto de observar un acontecimiento se considera parte del proceso que se está modelando. Esto significa que el momento de una observación depende de los acontecimientos que hayan tenido lugar antes. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana.
+
+Explicación matriz theta
+
+%Los datos se deben encontrar en una matriz en la cual las filas representan pacientes o sujetos y las columnas genes/SNPs/etc. Cada celda puede contener un 1 si el evento, alteración o mutación está presente o un 0 si no fue observado -> Evamtools methods y FAQ
 
 
 \section{Comparación de implementaciones entre R y Python}
 
 \subsection{Funcionalidad}
-El módulo \code{mhn} de Python ...
+\subsubsection{Python: MHN}
+El módulo \code{mhn} de Python cuenta con las funciones originales de MHN. Cuenta con implementación en CUDA, la GPU de Nvidia, para poder acelerar el cálculo de la puntuación de la log-verosimilitud y su gradiente tanto para el espacio de estados completo como para el restringido.
 
+El módulo de Python cuenta con los dos frameworks comentados anteriormente, el clásico y el corregido. Los autores recomiendan en la mayoría de los escenarios utilizar el modelo con el sesgo corregido, ya que aumenta la interpretabilidad de los parámetros inferidos, aunque el modelado de los datos no se vea afectado. El primer paso es escoger la función de optimizado, siendo \code{cMHNOptimizer()} el del modelo MHN clásico y \code{oMHNOptimizer()} el del modelo corregido.
+
+Se requiere que los datos de input estén en formato de matriz binaria, la cual se puede importar con el módulo \code{pandas} y la función \code{load\_data\_matrix()} o, en caso de que esté en un fichero csv, directamente con \code{load\_data\_from\_csv()}.
+
+Al tratarse de un algoritmo de aprendizaje automático, se requiere penalizar la inferencia de parámetros de modo que, en general, se prefiera un conjunto de parámetros disperso/parsimonioso. El resultado es explicar bien los datos de entrada de entrenamiento con el menor número posible de parámetros para que el modelo siga siendo generalizable a los datos de prueba. Así, los modelos generados son más sencillos e interpretables, evitando el sobreajuste. Para este paso, los autores han establecido dos formas de penalización:
+\begin{itemize}
+\item \textbf{Penalización estándar L1:} penaliza los parámetros individuales, fomentando que muchos de ellos sean exactamente cero. Esto conduce a un modelo disperso en el que sólo permanecen activos los parámetros más importantes. 
+\item \textbf{Penalización simétrica personalizada:} penaliza los pares de parámetros que son simétricos en la matriz $\Theta$ (con respecto a la diagonal). El coste de que ambos parámetros de un par sean distintos de cero equivale a que sólo uno sea distinto de cero. Al fomentar la simetría en el modelo, se puede alinear mejor con las relaciones biológicas, como los efectos epistáticos.
+\end{itemize}
+
+En el artículo \cite{Schill2024}, los autores recomiendan elegir la penalización basándose en el conocimiento previo sobre la estructura de los efectos que se esperan en el tipo de datos con los que se está trabajando. 
+
+El siguiente paso es la elección de hiperparámetros de validación cruzada. Se prueba un rango de diferentes penalizaciones («lambdas») para identificar una que produzca un rendimiento óptimo en los datos retenidos. Se pueden definir los siguientes hiperparámetros: la intensidad mínima y máxima de la penalización («lambda») que se probará (usualmente se espera un lambda de $1/n$, siendo n el número de observaciones, por lo que se escogen un mínimo y máximo alrededor de ese valor), la cantidad de pasos (es decir, la longitud de la secuencia lambda) que hay que dar entre estos límites y la cantidad de folds en que queremos dividir nuestros datos para la validación cruzada. Generalmente, un rango grande con un tamaño de paso pequeño y muchos folds producirá los resultados más precisos, pero aumenta el tiempo de cálculo. 
+
+\subsubsection{Web app: evamtools}
+
+\subsubsection{R: evamtools}
 El paquete de \code{evamtools} de R cuenta con 10 funciones exportadas:
 \begin{itemize}
-\item \code{evam}:
+\item \code{evam}: genera un objeto que debería contener información sobre los métodos utilizados.
 \item \code{every\_which\_way\_data}:
 \item \code{ex\_mixed\_and\_or\_xor}:
-\item \code{examples\_csd}:
+\item \code{examples\_csd}: proporciona ejemplos de datos de tipo cross-sectional (sección transversal), que se pueden usar como entrada para probar las funcionalidades del paquete. Esto es útil para experimentar con el paquete sin tener que preparar datos propios.
 \item \code{plot\_CPMs}:
-\item \code{plot\_evam}:
+\item \code{plot\_evam}: genera representaciones gráficas de modelos ajustados EvAM, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
 \item \code{random\_evam}:
 \item \code{runShiny}:
 \item \code{sample\_CMPs}:
