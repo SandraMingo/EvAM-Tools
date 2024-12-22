@@ -66,7 +66,9 @@ El siguiente paso es la elección de hiperparámetros de validación cruzada. Se
 El último paso es entrenar el modelo final con el lambda óptimo obtenido de la validación cruzada. Esto se consigue con \code{train()}, y los resultados se pueden guardar en formato csv y un fichero log en formato json con \code{result.save()}. El output principal se puede visualizar con \code{result.plot()}, mostrando la matriz $\Theta$ logarítmica de forma predeterminada. 
 
 \subsubsection{Web app: evamtools}
+La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, permitiendo estudiar acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
 
+La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero o metiendo manualmente las frecuencias del genotipo. También se permite generar datos transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz log-$Theta$. 
 
 \subsubsection{R: evamtools}
 El paquete de \code{evamtools} de R cuenta con 10 funciones exportadas:
