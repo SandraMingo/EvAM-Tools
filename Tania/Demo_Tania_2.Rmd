@@ -1,0 +1,392 @@
+---
+title: "Trabajo_R_demo"
+output:
+  pdf_document: default
+  html_document: default
+date: "2024-12-21"
+---
+
+# "Flujo de trabajo con EvAMTools y Mutual Hazard Networks (MHN)"
+
+### Propósito del paquete
+
+EvAM Tools está diseñado para trabajar con modelos de acumulación evolutiva o de progresión de eventos. Concretamente, en el caso de los MHN, el objetivo principal es modelar las relaciones de riesgo mutuo entre eventos genéticos (por ejemplo, mutaciones), donde la probabilidad de un evento depende de la ocurrencia de otros eventos.
+
+### Instalación
+
+Para comenzar a usar el paquete, puedes optar por varias formas de instalación:
+
+- **Instalación en R**: Instala el paquete usando las instrucciones dadas en la sección *How to install the R package*.
+- **Uso de imágenes Docker**: Si prefieres una configuración preempaquetada, puedes usar imágenes de Docker para ejecutar tanto el paquete de R como la aplicación Shiny sin necesidad de configuraciones adicionales en tu sistema.
+- **Ejecución local**: También puedes ejecutar el paquete y la aplicación Shiny localmente, sin usar Docker, siguiendo las instrucciones específicas.
+
+```{r}
+# Instalar el paquete desde GitHub (requiere devtools)
+# if (!requireNamespace("devtools", quietly = TRUE)) {
+#   install.packages("devtools")
+# }
+# devtools::install_github("rdiaz02/evamtools")
+# 
+# # Cargar el paquete
+# library(evamtools)
+
+```
+
+
+
+### Demo
+
+#### 1. Ingreso de datos
+
+- **Carga de datos de entrada**: Los datos de entrada pueden ser:
+  - Datos genotípicos reales (obtenidos de experimentos o bases de datos).
+  - Datos sintéticos generados manualmente.
+
+Si los datos son sintéticos, puedes simular datos bajo diferentes estructuras de dependencia, como matrices de riesgos mutuos (*log-Theta*) o redes dirigidas acíclicas (DAGs).
+
+
+Para los análisis con MHN, necesitamos un dataset de frecuencias de genotipos o datos de eventos. Puedes cargar tus propios datos o usar ejemplos incluidos en el paquete.
+
+
+```{r}
+#Datos incluidos en el paquete:
+# Cargar los datos de ejemplo
+data(examples_csd)
+
+# Ver la estructura de los datos de ejemplo
+str(examples_csd)
+
+# Acceder a los datos de la matriz MHN (si quieres trabajar con MHN)
+mhn_matrix <- examples_csd$matrix
+
+# Ver los datos de la matriz MHN
+print(mhn_matrix)
+
+
+```
+
+
+```{r}
+# # Extraer la matriz theta de MHN_all_0
+# theta_all_0 <- mhn_matrix$MHN_all_0$thetas
+# print(theta_all_0)
+# 
+# # Extraer la matriz theta de MHN_Ex_1
+# theta_ex_1 <- mhn_matrix$MHN_Ex_1$thetas
+# print(theta_ex_1)
+# 
+# 
+# library(knitr)
+# kable(theta_ex_1, format = "markdown", caption = "Matriz de thetas para MHN_Ex_1")
+# 
+# library(ggplot2)
+# library(reshape2)
+# 
+# # Convierte la matriz en un formato apto para ggplot
+# theta_ex_1_df <- melt(theta_ex_1)
+# 
+# # Genera un heatmap
+# ggplot(theta_ex_1_df, aes(x = Var1, y = Var2, fill = value)) +
+#   geom_tile() +
+#   scale_fill_gradient2(low = "blue", mid = "white", high = "red", midpoint = 0) +
+#   labs(title = "Heatmap de la Matriz Theta (MHN_Ex_1)", x = "Nodo", y = "Nodo", fill = "Theta") +
+#   theme_minimal()
+
+
+```
+
+
+
+```{r}
+#Uso datos del paquete:
+data(every_which_way_data)
+
+#Seleccionar solo unos pcos datos
+Dat1 <- every_which_way_data[[16]][1:40, 2:6]
+
+
+```
+
+
+
+```{r}
+#Datos de la demo de Python:
+
+# Leer el archivo CSV como un data frame (tener el fichero en el directorio de trabajo)
+input_df <- read.csv('LUAD_n12.csv')
+input_df <- read.csv("BRCA_ba_s.csv")
+# Convertir el data frame a una matriz
+input_matrix <- as.matrix(input_df) 
+##Es necesrio que sea una matriz??? En python tiene que ser un dataframe??
+
+# Verificar la clase
+class(input_matrix)
+
+```
+
+```{r}
+dim(input_matrix)  # Ver las dimensiones
+head(input_matrix) # Ver las primeras filas
+
+# Número de observaciones (filas)
+cat("Number of observations:", nrow(input_matrix), "\n")
+
+# Número de eventos (columnas)
+cat("Number of events:", ncol(input_matrix), "\n")
+
+```
+
+```{r}
+# Imprimir mensaje
+cat("Event frequencies:\n")
+
+# Calcular frecuencias
+event_frequencies <- colSums(input_matrix) / nrow(input_matrix)
+
+# Imprimir frecuencias
+print(event_frequencies)
+
+```
+
+
+```{r}
+# Imprimir mensaje
+cat("Distribution of active event counts across observations:\n")
+
+# Calcular la suma por filas
+row_sums <- rowSums(input_matrix)
+
+# Contar las frecuencias de cada suma y ordenarlas
+distribution <- table(row_sums)
+
+# Mostrar la distribución ordenada
+print(distribution)
+
+```
+
+```{r}
+# Establecer la semilla para la reproducibilidad
+set.seed(6)
+
+# Seleccionar un subconjunto aleatorio de 500 filas
+input_subset <- input_matrix[sample(1:nrow(input_matrix), size = 500, replace = FALSE), ]
+
+# Calcular la suma por filas
+row_sums <- rowSums(input_subset)
+
+# Contar las frecuencias de cada suma y ordenarlas
+distribution <- table(row_sums)
+
+# Mostrar la distribución ordenada
+print(distribution)
+
+```
+
+
+#### 2. Inferencia con MHN
+
+- **Modelo MHN**:
+  - Los MHN modelan cómo un evento (por ejemplo, una mutación) afecta la probabilidad de otros eventos, basándose en las tasas de riesgo mutuo.
+  - Los parámetros del modelo se ajustan utilizando funciones específicas del paquete.
+- **Inferencia de modelos**:
+  - Ejecuta las funciones del paquete (o usa la app Shiny) para ajustar los modelos a los datos proporcionados.
+  
+
+- Función evam():
+
+Esta función ejecuta modelos **EvAM** reales basados en un conjunto de datos específico que proporcionas. Se utiliza para analizar datos genotípicos o fenotípicos reales con los diferentes métodos disponibles, como **CBN**, **MHN**, **OT**, **HESBCN**, etc.
+
+## Propósito
+- Analizar datos empíricos (reales) para inferir relaciones evolutivas entre genotipos o características.
+- Identificar patrones o modelos que expliquen la evolución de genotipos en un contexto como cáncer o mutaciones genéticas.
+
+## Cómo funciona
+1. Toma un conjunto de datos reales como entrada (p. ej., una matriz de genotipos/muestras).
+2. Aplica uno o más métodos para construir un modelo que explique la evolución de los datos proporcionados.
+  
+```{r}
+# Ejecutar el modelo MHN
+results_mhn <- evam(
+  x = input_subset,                     # Datos de entrada
+  methods = c("MHN"),                   # Usamos el modelo MHN
+  mhn_opts = list(lambda = 0.1),        # Parámetros específicos para MHN (ajustable)
+  cores = 2                             # Número de núcleos para paralelización (opcional)
+)
+
+# Ver resultados
+#print(results_mhn)
+
+#Revisar modelo
+summary(results_mhn)
+
+```
+Interpretación de resultados:
+
+Este modelo está ajustado a tus datos específicos, lo que significa que los resultados reflejan las transiciones y las frecuencias genotípicas que el modelo MHN ha identificado en base a las observaciones de tu conjunto de datos.
+
+Parámetros del modelo ajustado: 
+
+- **MHN_theta**: parámetros de transición del modelo MHN que controlan cómo se realizan las transiciones entre los estados.
+- **MHN_trans_rate_mat**: Describe las tasas de transición entre estados.
+- **MHN_trans_mat**: Describe las probabilidades de transición entre estados.
+- **MHN_td_trans_mat**: Describe las tasas de transición temporalmente dependientes, es decir, cómo las transiciones pueden cambiar con el tiempo.
+- **MHN_exp_theta**: Esta es una matriz de valores esperados calculados en el modelo MHN.
+
+Predicciones del modelo???
+
+- **MHN_predicted_genotype_freqs**: Es un vector que contiene las frecuencias genotípicas predichas bajo el modelo MHN. Este podría representar la probabilidad de cada genotipo en cada uno de los posibles estados posibles.
+- **MHN_paths_max**: Representaría las trayectorias máximas o secuencias más probables de estados bajo el modelo MHN.
+
+- **original_data** y **analyzed_data**: 
+- **genotype_id_ordered**: Vector de enteros que representa un orden de identificación de los genotipos, con nombres asociados.
+- **all_options**: Dentro de ella destacan **mhn_opts**. Este contiene configuraciones específicas para el modelo MHN, como el valor de `lambda` y `omp_threads` (que indica el número de hilos para la ejecución paralela).
+
+```{r}
+# Convertir matrices de formato esparso a formato denso
+trans_rate_mat <- as.matrix(results_mhn$MHN_trans_rate_mat)
+trans_mat <- as.matrix(results_mhn$MHN_trans_mat)
+td_trans_mat <- as.matrix(results_mhn$MHN_td_trans_mat)
+
+```
+
+
+- Función sample_evam():
+
+Esta función genera modelos **EvAM** aleatorios. Es decir, en lugar de analizar datos reales, crea un modelo basado en parámetros predefinidos, como el número de genes o la densidad de conexiones entre nodos. Estos modelos son útiles para simulaciones, pruebas o comparaciones.
+
+## Propósito
+- Crear modelos ficticios para explorar el comportamiento de las herramientas o probar hipótesis en un entorno controlado.
+- Comparar modelos generados con datos reales versus modelos aleatorios para validar metodologías.
+
+## Cómo funciona
+1. Define un modelo de evolución de manera aleatoria, basándose en parámetros como:
+   - Número de genes.
+   - Tipo de modelo (**OT**, **CBN**, etc.).
+   - Densidad de conexiones.
+2. No requiere datos reales como entrada.
+
+```{r}
+genes_name <- names(input_df)
+```
+
+
+```{r}
+# Generamos un modelo aleatorio con 12 genes y el modelo MHN
+results_random_mhn <- random_evam(
+  ngenes = 12,                   # Número de genes aleatorios
+  #gene_names = genes_name,       # Añadir el nombre de los genes
+  model = "MHN",                 # Usamos el modelo MHN
+  graph_density = 0.3            # Densidad del grafo
+)
+
+# Ver resultados
+#print(results_random_mhn)
+
+summary(results_random_mhn)
+```
+
+Parámetros aleatorios: random_evam genera una estructura aleatoria con un número específico de genes y una densidad de grafo definida. Los resultados de este modelo no tienen relación directa con los datos reales, sino que se basan en parámetros aleatorios.
+
+Frecuencias y transiciones: Las matrices de transición y las frecuencias genotípicas generadas por el modelo aleatorio deberían mostrar una distribución sin ningún patrón significativo. Esto servirá como un punto de referencia para comparar si los resultados del modelo real muestran alguna estructura coherente.
+
+
+#### C. Representación gráfica
+
+- Una vez ajustado el modelo:
+  - Genera visualizaciones del modelo, como DAGs de restricciones o matrices *log-Theta*.
+  - Representa gráficamente las frecuencias genotípicas y las probabilidades de transición entre genotipos.
+
+
+### 4. Simulación y análisis posterior
+
+Los modelos MHN permiten:
+
+- **Simulación de datos**:
+  - Crea conjuntos de datos sintéticos a partir de modelos MHN para explorar diferentes escenarios.
+  
+  
+  
+  
+```{r}
+
+## Sample from the predicted genotype frequencies
+## only for MHN
+outS1_ot <- sample_evam(out, N = 1000, methods = "MHN")
+
+## Same, but adding observation error
+outS1e <- sample_evam(out, N = 1000, obs_noise = 0.1)
+
+## Only CBN and will simulate sampling from the transition
+## rate matrix. 
+
+outS2 <- sample_evam(out, N = 1000, methods = "CBN",
+                     output = "obs_genotype_transitions")
+
+## For CBN and MHN simulate from the transition rate matrix
+
+outS3 <- sample_evam(out, N = 1000, methods = c("CBN", "OT", "MHN"),
+                     output = c("obs_genotype_transitions",
+                                "state_counts"))
+
+```
+  
+  
+- **Pruebas cruzadas**:
+  - Analiza datos generados bajo un modelo (por ejemplo, CBN) con métodos MHN para explorar cómo difieren los resultados entre enfoques.
+  
+  
+  
+- **Predicción y transición**:
+  - Evalúa frecuencias genotípicas esperadas y tasas de transición entre genotipos.
+
+
+
+```{r}
+# Generar muestras de genotipos
+samples <- sample_evam(
+  cpm_output = results_mhn,
+  N = 1000,                 # Número de muestras a generar
+  methods = c("MHN")         # Especificar el método usado en los modelos
+)
+
+# Inspeccionar las muestras
+#print(samples)
+summary(samples)
+
+```
+
+```{r}
+#hist(samples$MHN_sampled_genotype_counts)
+
+hist(samples$MHN_sampled_genotype_counts,
+     xlim = c(0, 12),
+     ylim = c(0, 4000),         # Limitar el eje x hasta 20
+     breaks = 1000,       # Número de bins
+     main = "Histograma de Genotipos",  # Título del gráfico
+     xlab = "Genotipos",  # Etiqueta del eje x
+     ylab = "Frecuencia")  # Etiqueta del eje y
+```
+
+
+### 6. Guardar y visualizar datos: 
+
+```{r}
+# Guardar resultados en un archivo
+#write.csv(samples, "resultados_muestras.csv", row.names = FALSE)
+```
+
+
+
+
+### 5. Uso de la app Shiny para exploración interactiva
+
+La aplicación Shiny facilita:
+
+- Subir datos y ajustar modelos sin escribir código.
+- Modificar parámetros del modelo de manera interactiva.
+- Generar y visualizar resultados en tiempo real.
+
+### 6. Documentación adicional
+
+Para detalles más específicos sobre los archivos `MHN__*.R` (por ejemplo, funciones de utilidad, optimización, construcción de modelos),.
+
