@@ -47,7 +47,7 @@ En este contexto de redes de riesgo mutuo, la matriz $\Theta$ captura la relaci�
 
 \subsection{Funcionalidad}
 \subsubsection{Python: MHN}
-El módulo \code{mhn} de Python cuenta con las funciones originales de MHN. Cuenta con implementación en CUDA, la GPU de Nvidia, para poder acelerar el cálculo de la puntuación de la log-verosimilitud y su gradiente tanto para el espacio de estados completo como para el restringido.
+El módulo \code{mhn} de Python cuenta con las funciones originales de MHN. Cuenta con implementación en CUDA, la GPU de Nvidia, para poder acelerar el cálculo de la puntuación de la log-verosimilitud y su gradiente tanto para el espacio de estados completo como para el restringido.mmmmmmmmmmmmmmmm
 
 El módulo de Python cuenta con los dos frameworks comentados anteriormente, el clásico y el corregido. Los autores recomiendan en la mayoría de los escenarios utilizar el modelo con el sesgo corregido, ya que aumenta la interpretabilidad de los parámetros inferidos, aunque el modelado de los datos no se vea afectado. El primer paso es escoger la función de optimizado, siendo \code{cMHNOptimizer()} el del modelo MHN clásico y \code{oMHNOptimizer()} el del modelo corregido.
 
