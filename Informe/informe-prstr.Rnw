@@ -74,7 +74,9 @@ Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respe
 
 
 \subsubsection{R: evamtools}
-El paquete de \code{evamtools} de R cuenta con 10 funciones exportadas:
+El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos datos que se pueden generar (función \code{random\_evam}) o importar desde un csv. Los CPMs que incluye son Conjunctive Bayesian Networks (CBM), Oncogenic Trees (OT), Disjunctive Bayesian Networks (DBN: OncoBN), Hidden Extended Suppes-Bayes Causal Networks (H-ESBCN) y MHN. 
+
+El paquete cuenta con 10 funciones exportadas:
 \begin{itemize}
 \item \code{evam}: genera un objeto que debería contener información sobre los métodos utilizados.
 \item \code{every\_which\_way\_data}:
@@ -94,6 +96,8 @@ El paquete de \code{evamtools} de R cuenta con 10 funciones exportadas:
 En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo.
 
 Respecto a la web app, es intuitiva de utilizar y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}.
+
+Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos y ser utilizable para análisis sistemáticos. 
 
 \section{Integración del código en Python con evamtools}
 
