@@ -44,7 +44,6 @@ En este contexto de redes de riesgo mutuo, la matriz $\Theta$ captura la relaci�
 
 %Los datos se deben encontrar en una matriz en la cual las filas representan pacientes o sujetos y las columnas genes/SNPs/etc. Cada celda puede contener un 1 si el evento, alteración o mutación está presente o un 0 si no fue observado -> Evamtools methods y FAQ
 
-
 \section{Comparación de implementaciones entre R y Python}
 
 \subsection{Funcionalidad}
@@ -72,8 +71,7 @@ La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}
 
 La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero o metiendo manualmente las frecuencias del genotipo. También se permite generar datos transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. 
 
-Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respectivo histograma. Bajo opciones avanzadas se pueden seleccionar los distintos CPMs a utilizar y personalizar algunos de los parámetros. Los resultados se pueden visualizar en forma de los grafos acíclicos dirigidos o la matriz de MHN, además de la tabla de predicción de los modelos ajustados.
-
+Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respectivo histograma. Bajo opciones avanzadas se pueden seleccionar los distintos CPMs a utilizar y personalizar algunos de los parámetros. Los resultados se pueden visualizar en forma de los grafos acíclicos dirigidos o la matriz de MHN, además de la tabla de predicción de los modelos ajustados. Estos resultados se pueden descargar en formato RDS, tratándose de un objeto de R, al cual se puede importar.
 
 \subsubsection{R: evamtools}
 El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos datos que se pueden generar (función \code{random\_evam}) o importar desde un csv. Los CPMs que incluye son Conjunctive Bayesian Networks (CBM), Oncogenic Trees (OT), Disjunctive Bayesian Networks (DBN: OncoBN), Hidden Extended Suppes-Bayes Causal Networks (H-ESBCN) y MHN. 
@@ -93,6 +91,7 @@ El paquete cuenta con 10 funciones exportadas:
 \end{itemize}
 
 \subsection{Velocidad}
+Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando igual. No obstante, al calcular el modelo con \code{evam}, el tiempo que tarda en ejecutarse es inferior con los datos en forma de matriz. 
 
 \subsection{Ventajas y desventajas}
 En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo.
