@@ -32,6 +32,8 @@ opts_knit$set(stop_on_error = 2L)
 %\cite{ModellingCancerProgression} -> Modelling cancer progression using Mutual Hazard Network
 %\cite{OvercomingObservationBias} -> Overcoming Observation Bias for Cancer Progression Modeling
 %\cite{Schill2024} -> Correcting for Observation Bias in Cancer Progression Modeling
+%\cite{DiazUriarte2019} -> Every which way? On predicting tumor evolution using cancer progression models
+%\cite{DiazColunga2021} -> Conditional prediction of consecutive tumor evolution using cancer progression models
 
 \section{Introducción a Mutual Hazard Networks}
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
@@ -78,16 +80,16 @@ El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos dato
 
 El paquete cuenta con 10 funciones exportadas:
 \begin{itemize}
-\item \code{evam}: genera un objeto que debería contener información sobre los métodos utilizados.
-\item \code{every\_which\_way\_data}:
+\item \code{evam}: genera un objeto que contiene información sobre los métodos utilizados a partir de unos datos proporcionados.
+\item \code{every\_which\_way\_data}: permite obtener 22 datasets de cáncer de los artículos \cite{DiazUriarte2019} y \cite{DiazColunga2021}.
 \item \code{ex\_mixed\_and\_or\_xor}:
 \item \code{examples\_csd}: proporciona ejemplos de datos de tipo cross-sectional (sección transversal), que se pueden usar como entrada para probar las funcionalidades del paquete. Esto es útil para experimentar con el paquete sin tener que preparar datos propios.
 \item \code{plot\_CPMs}:
 \item \code{plot\_evam}: genera representaciones gráficas de modelos ajustados EvAM, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
-\item \code{random\_evam}:
+\item \code{random\_evam}: genera un modelo de forma aleatoria a partir de un número de genes indicado.
 \item \code{runShiny}:
 \item \code{sample\_CMPs}:
-\item \code{sample\_evam}:
+\item \code{sample\_evam}: con el modelo creado, se genera un número de muestras aleatorias.
 \end{itemize}
 
 \subsection{Velocidad}
