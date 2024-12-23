@@ -1,7 +1,7 @@
 %% ;;; -*- mode: Rnw; -*-
 \documentclass[nochap]{config/ejercicios}
 
-\title{Mutual Hazard Networks con Evamtools y Python - Grupo 6}
+\title{Mutual Hazard Networks con EvAM-Tools y Python - Grupo 6}
 \author{Tania Gonzalo Santana \\ Claudia Guerrero Rodríguez \\ Sandra Mingo Ramírez \\ Daniel Parra Gutiérrez }
 \date{2024/25}
 
