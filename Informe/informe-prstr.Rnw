@@ -78,17 +78,21 @@ El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos dato
 
 El paquete cuenta con 10 funciones exportadas:
 \begin{itemize}
-\item \code{evam}: genera un objeto que contiene información sobre los métodos utilizados a partir de unos datos proporcionados.
-\item \code{every\_which\_way\_data}: permite obtener 22 datasets de cáncer de los artículos \cite{DiazUriarte2019} y \cite{DiazColunga2021}.
-\item \code{ex\_mixed\_and\_or\_xor}:
-\item \code{examples\_csd}: proporciona ejemplos de datos de tipo cross-sectional (sección transversal), que se pueden usar como entrada para probar las funcionalidades del paquete. Esto es útil para experimentar con el paquete sin tener que preparar datos propios.
-\item \code{plot\_CPMs}:
-\item \code{plot\_evam}: genera representaciones gráficas de modelos ajustados EvAM, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
-\item \code{random\_evam}: genera un modelo de forma aleatoria a partir de un número de genes indicado.
-\item \code{runShiny}:
-\item \code{sample\_CMPs}:
-\item \code{sample\_evam}: con el modelo creado, se genera un número de muestras aleatorias.
+\item \code{evam}: Esta es la función principal para ajustar un modelo EvAM a un conjunto de datos proporcionados por el usuario (datos trasnversales).Genera un objeto que contiene la estructura del modelo ajustado, parámetros estimados y restricciones inferidas.
+\item \code{every\_which\_way\_data}: Proporciona un conjunto de datos de prueba predefinido (22 datasets de datos de cáncer de los artículos \cite{DiazUriarte2019} y \cite{DiazColunga2021}.). Pueden ser usados como ejemplo o para validaciones.
+\item \code{ex\_mixed\_and\_or\_xor}: Es un conjunto de datos de ejemplo que incluye combinaciones de relaciones AND, OR y XOR entre eventos.
+\item \code{examples\_csd}: Es un conjunto de datos de ejemplo diseñado para ilustrar modelos de datos seccionales cruzados (cross-sectional data). Estos pueden ser usados para probar las funcionalidades del paquete, sin la necesidad de preparar datos propios.
+\item \code{plot\_evam}: Esta función genera representaciones gráficas de modelos ajustados EvAM y sus relaciones, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
+\item \code{random\_evam}: Esta función genera un modelo aleatorio de un tipo especificado, pudiendo personalizar parámetros como el número de genes, densidad del grafo, pesos, y distribución de errores. Devuelve un objeto con la misma estrutura que la función evam. Esta función puede es util para simulaciones y pruebas.
+\item \code{runShiny}: Inicia la aplicación web Shiny integrada para explorar modelos de forma interactiva.
+\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random_evam).Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
+\item \code{evamtools\-deprecated}: Son funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
+    \begin{itemize}
+        \item \code{plot_CPMs}:
+        \item \code{sample_CPMs}:
+    \end{itemize}
 \end{itemize}
+\item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete.Es utilizada internamente por runShiny.
 
 \subsection{Velocidad}
 Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando igual. No obstante, al calcular el modelo con \code{evam}, el tiempo que tarda en ejecutarse es inferior con los datos en forma de matriz. 
