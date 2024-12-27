@@ -1,0 +1,484 @@
+---
+title: "Shiny_web"
+output: html_document
+date: "2024-12-22"
+---
+
+
+## 1. Cargar Datos
+
+Los datos deben tener unas carateristicas concretas: 
+
+The format should be CSV (comma separated values), with subjects in rows and genes in columns. Use 0 or 1 for altered/not-altered (mutated/not-mutated). The first row should contain the gene names, and there should be no subject names (i.e., no column of subject names).
+
+- Use only alphanumeric characters for gene names, and do not start a gene name with a number.
+- Keep gene names short (for figures).
+
+A short example file is available here:
+
+[Example file](https://raw.githubusercontent.com/rdiaz02/EvAM-Tools/main/examples_for_upload/tinydata.csv)
+
+Additional examples can be found in this directory:
+
+[Additional examples](https://github.com/rdiaz02/EvAM-Tools/tree/main/examples_for_upload)
+
+Make sure to view the files as raw or download them and open them with a text editor on your computer.
+
+
+```{r}
+# Cargar datos de un archivo CSV
+data <- read.csv("tinydata.csv")
+
+```
+
+# Enter genotypes frecuency manually:
+
+```{r}
+# Lista de genotipos y sus datos
+genotypes <- c('Z', 'a', 'D', 'c')
+data_manual <- matrix(c(
+  0, 0, 1, 1,
+  1, 1, 0, 0,
+  1, 1, 1, 1,
+  0, 0, 0, 0,
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 1, 0, 0
+), nrow = 7, byrow = TRUE)
+
+#Convertir a dataframe
+data_manual <- as.data.frame(data_manual)
+colnames(data_manual) <- genotypes 
+
+```
+
+```{r}
+# Contar la cantidad de mutaciones en cada columna
+mutations_count <- colSums(data)
+
+# Crear el histograma (gráfico de barras)
+barplot(mutations_count, 
+        main = "Number of mutations per gene",
+        xlab = "Gen", 
+        ylab = "Number of mutations",
+        col = "pink")
+
+
+
+# Contar la cantidad de 1's (mutaciones) en cada columna
+mutations_count <- colSums(data_manual)
+
+# Crear el histograma (gráfico de barras)
+barplot(mutations_count, 
+        main = "Number of mutations per gene",
+        xlab = "Gen", 
+        ylab = "Number of mutations",
+        col = "skyblue")
+
+```
+#Obtener el grafico que sale en la pagina web cuando metes los gráficos (antes de hacer el modelo)
+
+```{r}
+# Inicializar un vector para las combinaciones
+combinations <- list()
+
+genotypes <- colnames(data)
+
+# Recorrer las filas de datos
+for (i in 1:nrow(data)) {
+  # Crear la combinación de genotipos presentes
+  combination <- genotypes[which(data[i, ] == 1)]
+  if (length(combination) == 0) {
+    combination <- "WT"  # Para el caso donde no hay genotipos presentes
+  } else {
+    combination <- paste(sort(combination), collapse = ', ')  # Ordenar y unir
+  }
+  combinations[[i]] <- combination
+}
+
+# Contar las ocurrencias de cada combinación
+counts <- table(unlist(combinations))
+
+# Crear un data frame con Index, Genotype y Counts
+result <- data.frame(
+  Index = 1:length(counts),
+  Genotype = names(counts),
+  Counts = as.integer(counts)
+)
+
+```
+
+
+```{r}
+# Dibujar el histograma en color naranja
+barplot(counts, 
+        col = "orange",  
+        main = "Genotype's counts", 
+        xlab = "Genotypes combinations", 
+        ylab = "Frecuency",  
+        las = 2,  
+        border = "black", 
+        ylim = c(0, max(counts) + 1))  
+
+##Ordenar como en la pagina web???
+```
+
+## 2. Ajuste del modelo
+
+```{r}
+# Ejecutar el modelo MHN
+results_mhn <- evam(data,                     # Datos de entrada
+  methods = c("MHN"),                   # Usamos el modelo MHN
+  mhn_opts = list(lambda =1/nrow(data)),    #Ajustable
+  cores = 2)
+
+#Revisar modelo
+#summary(results_mhn)
+
+##Jugar con el tiempo de ejecución en función de los cores
+##Yo la primera que lo hago siempre me tarda más.
+##Mirar el codigo por debajo para ver porque muestra el tiempo
+```
+
+#Exploración de los resultados de modelo mhn generado a partir de nuestro datos:
+```{r}
+#Inspeccion del objeto que te devuelve la función evam()
+matriz_theta <- results_mhn$MHN_theta
+matriz_theta_exp <- results_mhn$MHN_exp_theta
+
+print (matriz_theta)
+print (matriz_theta_exp)
+```
+- Los valores positivos en la matriz log-Θ indican relaciones promotoras, donde un evento genético aumenta la probabilidad de otro. 
+- Los valores negativos, por otro lado, indican relaciones inhibidoras, donde un evento genético disminuye la probabilidad de otro.
+
+```{r}
+# Instalar y cargar las librerías necesarias (si aún no están instaladas)
+# install.packages("ggplot2")
+# install.packages("reshape2")
+library(ggplot2)
+library(reshape2)
+
+# Convertir las matrices dispersas en formato largo
+matriz_theta <- results_mhn$MHN_theta
+matriz_theta_exp <- results_mhn$MHN_exp_theta
+
+# Convertir las matrices en formato largo para ggplot2
+df_theta_long <- melt(matriz_theta)
+colnames(df_theta_long) <- c("State1", "State2", "Theta")
+
+df_theta_exp_long <- melt(matriz_theta_exp)
+colnames(df_theta_exp_long) <- c("State1", "State2", "Exp_Theta")
+
+# Crear HeapMap para 'matriz_theta'
+ggplot(df_theta_long, aes(x = State1, y = State2, fill = Theta)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Theta") + 
+  labs(title = "HeatMap of Theta Matrix",
+       x = "States (From)",
+       y = "States (To)") + 
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),  
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(Theta, 2)), color = "black", size = 3)  
+
+# Crear el mapa de calor para 'matriz_theta_exp'
+ggplot(df_theta_exp_long, aes(x = State1, y = State2, fill = Exp_Theta)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Expected Theta") +  
+  labs(title = "HeatMap of Expected Theta Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(Exp_Theta, 2)), color = "black", size = 3) 
+
+```
+
+
+# HeatMap Rate Transitions Matrix
+
+```{r}
+# Crear la matriz de tasa de transición
+transition_rate_dgCmatrix <- results_mhn$MHN_trans_rate_mat
+transition_rate_matrix <- as.matrix(transition_rate_dgCmatrix)
+
+##Mirar porque dgMatrix??? da problemas para despues representar
+
+# Crear el mapa de calor con opciones de personalización
+heatmap(transition_rate_matrix, 
+        Rowv = NA, Colv = NA, 
+        col = heat.colors(256),  # Usar una paleta de colores
+        scale = "none",          # Sin normalización
+        main = "HeatMap of Rate Transition Matrix",  
+        cexCol = 1, cexRow = 1,  
+        margins = c(10, 10))     
+
+```
+# HeatMap Rate Transitions Matrix (con ggplot)
+```{r}
+# Convertir la matriz dispersa en un formato largo
+transition_rate_dgCmatrix <- results_mhn$MHN_trans_rate_mat
+transition_rate_matrix <- as.matrix(transition_rate_dgCmatrix)
+
+# Convertir la matriz en un formato largo para ggplot2
+df_long <- melt(transition_rate_matrix)
+colnames(df_long) <- c("State1", "State2", "TransitionRate")
+
+# Crear el mapa de calor con colores personalizados
+ggplot(df_long, aes(x = State1, y = State2, fill = TransitionRate)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Transition Rate") +  
+  labs(title = "HeatMap of Rate Transition Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(TransitionRate, 2)), color = "black", size = 3)  
+
+```
+
+# HeatMap Transitions Matrix (con ggplot)
+
+```{r}
+# Convertir la matriz dispersa en un formato largo
+transition_dgCmatrix <- results_mhn$MHN_trans_mat
+transition_matrix <- as.matrix(transition_dgCmatrix)
+
+# Convertir la matriz en un formato largo para ggplot2
+df_long <- melt(transition_matrix)
+colnames(df_long) <- c("State1", "State2", "TransitionMatrix")
+
+# Crear el mapa de calor con colores personalizados
+ggplot(df_long, aes(x = State1, y = State2, fill = TransitionMatrix)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Transition Matrix") +  
+  labs(title = "HeatMap of Transition Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(TransitionMatrix, 2)), color = "black", size = 3)
+```
+
+
+```{r}
+##############################Entender esto ############
+library(igraph)
+
+# Establecer un umbral para las interacciones (ajustar según sea necesario)
+umbral <- 0.5
+
+# Crear una matriz de adyacencia donde solo se conservan los valores mayores que el umbral
+matriz_adyacencia <- abs(matriz_theta) > umbral
+
+# Convertir la matriz de adyacencia en una matriz de adyacencia ponderada
+matriz_adyacencia_ponderada <- ifelse(matriz_adyacencia, abs(matriz_theta), 0)
+
+# Crear un objeto igraph a partir de la matriz de adyacencia ponderada
+red_riesgo_mutuo <- graph_from_adjacency_matrix(matriz_adyacencia_ponderada, mode = "undirected", weighted = TRUE)
+
+# Visualizar la red con parámetros personalizados
+plot(red_riesgo_mutuo, 
+     vertex.size = 10,             # Tamaño de los nodos
+     vertex.label.cex = 0.8,       # Tamaño de las etiquetas de los nodos
+     edge.width = E(red_riesgo_mutuo)$weight * 5, # Grosor de las aristas (proporcional al peso)
+     edge.color = ifelse(E(red_riesgo_mutuo)$weight > 0, "green", "red"), # Colores de las aristas
+     main = "Red de Riesgo Mutuo")  # Título del gráfico
+
+
+```
+
+```{r}
+
+MHN_predicted_genotype_freqs <- results_mhn$MHN_predicted_genotype_freqs
+
+#Convertir a data frame
+MHN_predicted_genotype_freqs_df <- as.data.frame(MHN_predicted_genotype_freqs)
+MHN_predicted_genotype_freqs_df$genotype <- rownames(MHN_predicted_genotype_freqs_df)
+
+
+barplot(MHN_predicted_genotype_freqs_df$MHN_predicted_genotype_freqs,
+        names.arg = MHN_predicted_genotype_freqs_df$genotype, 
+        col = "orange",            
+        main = "Genitypes Predicted Mutations", 
+        ylab = "Frecuencies", 
+        las = 2)                   
+
+
+#Esto para comparar con la parte final de la demo de Python??????
+```
+
+
+#Visualizacion de resultados 
+
+```{r}
+#plot_evam(result)
+
+#Tasas de transición
+plot_evam(
+   results_mhn, 
+   plot_type = "trans_rate_mat", 
+   top_paths=5)
+
+# #Para guardar la imagen descomentar
+# # Establecer el archivo de salida
+# png("trans_rate_matrix.png", width = 800, height = 600)
+# # Generar el gráfico
+# plot_evam(
+#    results_mhn,
+#    plot_type = "trans_rate_mat",
+#    top_paths = 5)
+# # Cerrar el dispositivo gráfico para guardar el archivo
+# dev.off()
+
+##docker cp magical_khorana:/home/rstudio/trans_rate.png C:\Users\Tania\Desktop\
+## magical_khorana --> docker ps --> NAMES
+## /home/rstudio/trans_rate.png --> path de la imagen que quieres
+## C:\Users\Tania\Desktop\ --> path de tu ordenador a donde lo quieres mandar
+
+# Probabilidades de transicion
+plot_evam(
+   results_mhn, 
+   plot_type = "trans_mat", 
+   top_paths=5)
+
+# #Para guardar la imagen descomentar
+# # Establecer el archivo de salida
+# png("trans_matrix.png", width = 800, height = 600)
+# # Generar el gráfico
+# plot_evam(
+#    results_mhn, 
+#    plot_type = "trans_mat", 
+#    top_paths=5)
+# # Cerrar el dispositivo gráfico para guardar el archivo
+# dev.off()
+
+```
+#Generar muestras aleatorias (necesario para la opción de plot_type="obs_genotype_transitions" en la función plot_evam())
+
+```{r}
+#Simulated data (a partir del modelo mhn entrenado con nuestros datos)
+out_samp_mhn <- sample_evam(results_mhn, 
+                            N = 10000,
+                            methods = "MHN",
+                            output = c("sampled_genotype_counts", 
+                                       "obs_genotype_transitions", "state_counts"), 
+                             #obs_noise, #Aqui recomienda poner el genotyping error de los datos
+                             genotype_freqs_as_data = TRUE)
+
+##Para generar obs_genotype_transitions creo que usa otro paquete de Ramón que es OncoSimulR(mirar).
+```
+
+## Exploración de lo devuelto por la función sample_evam:
+```{r}
+# Dibujar el histograma con datos simulados (comparar con el de los datos introducidos)
+barplot(out_samp_mhn$MHN_state_counts$Counts,
+        names.arg = out_samp_mhn$MHN_state_counts$Genotype, 
+        col = "orange",  
+        main = "Genotype's counts", 
+        xlab = "Genotypes combinations", 
+        ylab = "Frecuency",  
+        las = 2,  
+        border = "black", 
+        ylim = c(0, max(counts_simmul) + 1)) 
+
+#Esto puede ser el input para entrenar el podemos con evam (tiene el formatyo adecuado)
+out_samp_mhn$MHN_sampled_genotype_counts_as_data 
+
+#Compara estos dos ¿que diferencia hay?
+out_samp_mhn$MHN_obs_genotype_transitions
+results_mhn$MHN_trans_mat
+
+#Comparar 
+out_samp_mhn$MHN_sampled_genotype_counts
+results_mhn$MHN_predicted_genotype_freqs
+
+```
+
+```{r}
+
+plot_evam(
+   results_mhn,
+   out_samp_mhn,
+   plot_type =  "obs_genotype_transitions")
+
+# #Para guardar la imagen descomentar
+# # Establecer el archivo de salida
+# png("obs_genotype_transitions.png", width = 800, height = 600)
+# # Generar el gráfico
+# plot_evam(
+#    results_mhn,
+#    out_samp_mhn,
+#    plot_type =  "obs_genotype_transitions")
+# # Cerrar el dispositivo gráfico para guardar el archivo
+# dev.off()
+
+## Only showing new gene mutated respect with its parent
+plot_evam(
+   results_mhn,
+   out_samp_mhn,
+   plot_type =  "obs_genotype_transitions", 
+   label_type = "acquisition", 
+   top_paths = 3)
+```
+# Generaten cross-sectional data from CPM models (Realizar modelo customizado (sin meterle datos))
+
+### MHN log-Θ matrix
+
+##### 1. Define MHN's θs
+
+
+```{r}
+
+
+
+```
+
+##### 2. Generate data from the MHN model
+
+```{r}
+results_mhn_random <- random_evam(gene_names = c("A", "B", "C", "D"),
+                                  model = "MHN")
+
+##O pones el nombre de los genes o pones el numero
+##El objeto devuelto es muy similar al de la función evam()
+##Medir tiempo?? (en la función evam te sale pero aqui nop)
+##Aqui tampoco se puede escoger el numero d nucleao a usar
+##Si pones el numero de genes 10000 --> error ????
+
+
+## Parametro graph_density:
+# For MHN we use the same procedure as available in the original code of Schill et al. graph_density is 1- sparsity. A matrix of random thetas (from a normal 0, 1, distribution) is generated, where the number of non-zero entries is controlled by graph_density.
+```
+
+```{r}
+out_samp_mhn_random <- sample_evam(results_mhn_random, 
+                            N = 10000,
+                            methods = "MHN",
+                            output = c("sampled_genotype_counts", 
+                                       "obs_genotype_transitions", "state_counts"), 
+                             #obs_noise, #Aqui recomienda poner el genotyping error de los datos
+                             genotype_freqs_as_data = TRUE)
+
+
+```
+
+
+
+
+
+
+
+
