@@ -463,6 +463,132 @@ results_mhn_random <- random_evam(gene_names = c("A", "B", "C", "D"),
 # For MHN we use the same procedure as available in the original code of Schill et al. graph_density is 1- sparsity. A matrix of random thetas (from a normal 0, 1, distribution) is generated, where the number of non-zero entries is controlled by graph_density.
 ```
 
+#Exploración de los resultados de modelo mhn generado a partir de nuestro datos:
+```{r}
+#Inspeccion del objeto que te devuelve la función evam()
+matriz_theta_random <- results_mhn_random$MHN_theta
+matriz_theta_exp_random <- results_mhn_random$MHN_exp_theta
+
+print (matriz_theta_random)
+print (matriz_theta_exp_random)
+```
+- Los valores positivos en la matriz log-Θ indican relaciones promotoras, donde un evento genético aumenta la probabilidad de otro. 
+- Los valores negativos, por otro lado, indican relaciones inhibidoras, donde un evento genético disminuye la probabilidad de otro.
+
+```{r}
+# Convertir las matrices en formato largo para ggplot2
+df_theta_long <- melt(matriz_theta_random)
+colnames(df_theta_long) <- c("State1", "State2", "Theta")
+
+df_theta_exp_long <- melt(matriz_theta_exp_random)
+colnames(df_theta_exp_long) <- c("State1", "State2", "Exp_Theta")
+
+# Crear HeapMap para 'matriz_theta'
+ggplot(df_theta_long, aes(x = State1, y = State2, fill = Theta)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Theta") + 
+  labs(title = "HeatMap of Theta Matrix",
+       x = "States (From)",
+       y = "States (To)") + 
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),  
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(Theta, 2)), color = "black", size = 3)  
+
+# Crear el mapa de calor para 'matriz_theta_exp'
+ggplot(df_theta_exp_long, aes(x = State1, y = State2, fill = Exp_Theta)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Expected Theta") +  
+  labs(title = "HeatMap of Expected Theta Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(Exp_Theta, 2)), color = "black", size = 3) 
+
+```
+
+Matrices bastante diferentes a las del modelo generado con nuestros datos??????????
+
+
+
+# HeatMap Rate Transitions Matrix
+
+```{r}
+# Crear la matriz de tasa de transición
+transition_rate_dgCmatrix <- results_mhn_random$MHN_trans_rate_mat
+transition_rate_matrix <- as.matrix(transition_rate_dgCmatrix)
+
+##Mirar porque dgMatrix??? da problemas para despues representar
+
+# Crear el mapa de calor con opciones de personalización
+heatmap(transition_rate_matrix, 
+        Rowv = NA, Colv = NA, 
+        col = heat.colors(256),  # Usar una paleta de colores
+        scale = "none",          # Sin normalización
+        main = "HeatMap of Rate Transition Matrix",  
+        cexCol = 1, cexRow = 1,  
+        margins = c(10, 10))     
+
+```
+# HeatMap Rate Transitions Matrix (con ggplot)
+```{r}
+# Convertir la matriz dispersa en un formato largo
+transition_rate_dgCmatrix <- results_mhn_random$MHN_trans_rate_mat
+transition_rate_matrix <- as.matrix(transition_rate_dgCmatrix)
+
+# Convertir la matriz en un formato largo para ggplot2
+df_long <- melt(transition_rate_matrix)
+colnames(df_long) <- c("State1", "State2", "TransitionRate")
+
+# Crear el mapa de calor con colores personalizados
+ggplot(df_long, aes(x = State1, y = State2, fill = TransitionRate)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Transition Rate") +  
+  labs(title = "HeatMap of Rate Transition Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(TransitionRate, 2)), color = "black", size = 3)  
+
+```
+
+# HeatMap Transitions Matrix (con ggplot)
+
+```{r}
+# Convertir la matriz dispersa en un formato largo
+transition_dgCmatrix <- results_mhn_random$MHN_trans_mat
+transition_matrix <- as.matrix(transition_dgCmatrix)
+
+# Convertir la matriz en un formato largo para ggplot2
+df_long <- melt(transition_matrix)
+colnames(df_long) <- c("State1", "State2", "TransitionMatrix")
+
+# Crear el mapa de calor con colores personalizados
+ggplot(df_long, aes(x = State1, y = State2, fill = TransitionMatrix)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Transition Matrix") +  
+  labs(title = "HeatMap of Transition Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(TransitionMatrix, 2)), color = "black", size = 3)
+```
+
+
 ```{r}
 out_samp_mhn_random <- sample_evam(results_mhn_random, 
                             N = 10000,
@@ -471,10 +597,49 @@ out_samp_mhn_random <- sample_evam(results_mhn_random,
                                        "obs_genotype_transitions", "state_counts"), 
                              #obs_noise, #Aqui recomienda poner el genotyping error de los datos
                              genotype_freqs_as_data = TRUE)
-
-
+summary(out_samp_mhn_random)
+##Mensage que sale (en los ejemplos del paquete hace un suppressMessages)
 ```
 
+## Exploración de lo devuelto por la función sample_evam (con l modelo random realizado):
+```{r}
+MHN_sampled_genotype_counts_random <- as.numeric(out_samp_mhn_random$MHN_sampled_genotype_counts)
+
+genotypes <- c("WT", "A", "B", "A, B", "C", "A, C", "B, C", "A, B, C", "D", "A, D", "B, D", "A, B, D", "C, D", "A, C, D", "B, C, D", "A, B, C, D")
+
+genotypes_counts <- data.frame(
+  genotypes = genotypes,
+  counts = MHN_sampled_genotype_counts_random)
+
+# Dibujar el histograma con datos simulados (comparar con el de los datos introducidos)
+barplot(genotypes_counts$counts,
+        names.arg = genotypes_counts$genotype, 
+        col = "orange",  
+        main = "Genotype's counts", 
+        ylab = "Frecuency",  
+        las = 2,  
+        border = "black", 
+        ylim = c(0, max(genotypes_counts$counts) + 1)) 
+
+#Esto puede ser el input para entrenar el podemos con evam (tiene el formatyo adecuado)
+out_samp_mhn_random$MHN_sampled_genotype_counts_as_data 
+
+#Compara estos dos ¿que diferencia hay?
+out_samp_mhn_random$MHN_obs_genotype_transitions
+out_samp_mhn_random$MHN_obs_genotype_transitions
+out_samp_mhn_random$MHN_state_counts
+
+# Dibujar el histograma con datos simulados (comparar con el de los datos introducidos)
+barplot(out_samp_mhn_random$MHN_state_counts$Counts,
+        names.arg = out_samp_mhn_random$MHN_state_counts$Genotype, 
+        col = "orange",  
+        ylab = "Frecuency",  
+        las = 2,  
+        border = "black", 
+        ylim = c(0, max(out_samp_mhn_random$MHN_state_counts$Counts) + 1)) 
+
+## Que diferencia hay entre los dos barplot???
+```
 
 
 
