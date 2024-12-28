@@ -66,12 +66,20 @@ El siguiente paso es la elección de hiperparámetros de validación cruzada. Se
 
 El último paso es entrenar el modelo final con el lambda óptimo obtenido de la validación cruzada. Esto se consigue con \code{train()}, y los resultados se pueden guardar en formato csv y un fichero log en formato json con \code{result.save()}. El output principal se puede visualizar con \code{result.plot()}, mostrando la matriz $\Theta$ logarítmica de forma predeterminada. 
 
+
+%Preguntas clave:
+%¿Qué datos requieren? ¿En qué formato están las entradas/salidas?
+%¿Cómo funciona el sesgo de corrección en la práctica?
+
 \subsubsection{Web app: evamtools}
 La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, permitiendo estudiar acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
 
 La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero o metiendo manualmente las frecuencias del genotipo. También se permite generar datos transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. 
 
 Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respectivo histograma. Bajo opciones avanzadas se pueden seleccionar los distintos CPMs a utilizar y personalizar algunos de los parámetros. Los resultados se pueden visualizar en forma de los grafos acíclicos dirigidos o la matriz de MHN, además de la tabla de predicción de los modelos ajustados. Estos resultados se pueden descargar en formato RDS, tratándose de un objeto de R, al cual se puede importar.
+
+%Diferencias entre las funcionalidades de la app y el código Python.
+%Facilidad de uso y visualización.
 
 \subsubsection{R: evamtools}
 El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos datos que se pueden generar (función \code{random\_evam}) o importar desde un csv. Los CPMs que incluye son Conjunctive Bayesian Networks (CBM), Oncogenic Trees (OT), Disjunctive Bayesian Networks (DBN: OncoBN), Hidden Extended Suppes-Bayes Causal Networks (H-ESBCN) y MHN. 
@@ -94,8 +102,16 @@ El paquete cuenta con 10 funciones exportadas:
 \end{itemize}
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete.Es utilizada internamente por runShiny.
 
+%Comparar funcionalidadesde web y R (además de con python)
+
 \subsection{Velocidad}
 Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando igual. No obstante, al calcular el modelo con \code{evam}, el tiempo que tarda en ejecutarse es inferior con los datos en forma de matriz. 
+
+
+%Diseña experimentos sencillos:
+%Usa datasets de tamaño pequeño, mediano y grande.
+%Mide el tiempo de ejecución para las mismas tareas en ambas herramientas.
+% Velocidad con/sin CUDA.
 
 \subsection{Ventajas y desventajas}
 En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo.
@@ -104,9 +120,35 @@ Respecto a la web app, es intuitiva de utilizar y simple en cuanto a sus opcione
 
 Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos y ser utilizable para análisis sistemáticos. 
 
-\section{Integración del código en Python con evamtools}
+\section {Exploración de posibles integraciones}
+\subsection{Integración del código en Python en R (Evamtools)}
 
-\section{Modificar evamtools para incluir la corrección del sesgo}
+%Poner algo tipo: debido a que en Pyhton existen ciertas funcionalidades que no existen en evamtools, se podrían implementar estas o llamar a Python desde R....
+
+En muchas ocasions, es necesario combinar herramientas y librerías de diferentes lenguajes de programación con el objetivo de aprovechar sus fortalezas específicas. La ingración entre los lenguajes de Python y R puede ser clave, permitiendo así disponer de las funcionalidades de ambos paquetes (\code{mhn} y \code{evamtools}) para poder desarrollar proyectos más complejos.
+
+Con este propósito, el paquete \code{reticulate} de R proporciona una interfaz versátil que permite ejecutar código de Python directamente desde el entorno de R. \code{reticulate} facilita la interoperabilidad entre ambos lenguajes, permitiendo acceder a librerías, funciones y objetos de Python como si fueran nativos en R. Esta capacidad resulta especialmente útil cuando se desean utilizar paquetes especializados de Python, como \code{mhn}, dentro de un flujo de trabajo basado en R. \code{reticulate} es la opción elegida debido a su simplicidad, flexibilidad y su facilidad de acceso a las numerosas librerías de Python. 
+
+%Existen alternativas como ejecutar scripts de Python desde R mediante llamadas al sistema operativo (e.g., system() o system2()) o a través de API REST que comuniquen ambos lenguajes mediante solicitudes HTTP. 
+
+%También existe un paquete en Python (rpy2) que permite la integración en la dirección inversa, ejecutando código de R desde Python.
+
+En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al código de Python relacionado con el paquete \code{mhn} desde R. Los pasos seguidos fueron:
+
+- Configuración del entorno: Asegurar que Python esté instalado y accesible desde R mediante la configuración del intérprete Python en \code{reticulate} en la imagen de Docker.
+- Instalación del paquete \code{mhn} en Python
+- Ejecución de código de Python desde R: Llamar a las funciones del paquete \code{mhn} 
+- Transferencia de datos entre lenguajes: Probar la transferencia de datos y verificar la correcta ejecución de las funciones.
+
+
+% EN CASO DE QUE LO HICIÉRAMOS: Adicionalmente, hemos intentado implementar la integración inversa, es decir, llamar código de R desde Python, para explorar las capacidades de herramientas como \code{rpy2}. Esto nos permitió comparar la usabilidad y las limitaciones de ambas aproximaciones, observando que.....
+
+
+\subsection{Modificar evamtools para incluir la corrección del sesgo}
+%Pasos a seguir:
+%Leer el código de MHN en evamtools.
+%Identificar los puntos donde se podría insertar la lógica de corrección.
+%Consultar el código Python para adaptar las funciones de corrección.
 
 \printbibliography
 
