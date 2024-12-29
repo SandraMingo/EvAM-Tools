@@ -152,11 +152,11 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{plot\_evam}: Esta función genera representaciones gráficas de modelos ajustados EvAM y sus relaciones, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
 \item \code{random\_evam}: Esta función genera un modelo aleatorio de un tipo especificado, pudiendo personalizar parámetros como el número de genes, densidad del grafo, pesos, y distribución de errores. Devuelve un objeto con la misma estrutura que la función evam. Esta función puede es util para simulaciones y pruebas.
 \item \code{runShiny}: Inicia la aplicación web Shiny integrada para explorar modelos de forma interactiva.
-\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random\_evam).Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
-\item \code{evamtools\_deprecated}: Sus funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
+\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random\_evam). Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
+\item \code{evamtools\_deprecated}: Son funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
     \begin{itemize}
-        \item \code{plot\_CPMs}:
-        \item \code{sample\_CPMs}:
+        \item \code{plot\_CPMs}: Crea gráficos ajustados de EvAMs, utilizando los modelos ajustados y gráficos personalizados para las tasas y probabilidades de transición.
+        \item \code{sample\_CPMs}: Obtiene muestras de los genotipos de los modelos de CPM. Opcionalmente, cuenta los genotipos de transición. Para todos los métodos excepto OT  y OncoBN se puede solicitar \code{obs_genotype_transitions}, aunque se quitó de la versión web, por su poco uso y el aumento en el tiempo de procesado (por ello ya no se utiliza al tomar la muestra). Esta originalmente se obtiene contando las transiciones entre genotipos dos a dos em las simulaciones de Cadena de Markov de tiempo continuo. También se obtienen \code{state counts} al contar cuantas veces un genotipo fue visitado durante  este proceso.
     \end{itemize}
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete. Es utilizada internamente por runShiny.
 \end{itemize}
