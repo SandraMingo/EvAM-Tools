@@ -132,7 +132,7 @@ results_mhn <- evam(data,                     # Datos de entrada
   mhn_opts = list(lambda =1/nrow(data)),    #Ajustable
   cores = 2)
 
-#Revisar modelo
+
 #summary(results_mhn)
 
 ##Jugar con el tiempo de ejecución en función de los cores
@@ -392,7 +392,7 @@ barplot(out_samp_mhn$MHN_state_counts$Counts,
         ylab = "Frecuency",  
         las = 2,  
         border = "black", 
-        ylim = c(0, max(counts_simmul) + 1)) 
+        ylim = c(0, max(out_samp_mhn$MHN_state_counts$Counts) + 1)) 
 
 #Esto puede ser el input para entrenar el podemos con evam (tiene el formatyo adecuado)
 out_samp_mhn$MHN_sampled_genotype_counts_as_data 
