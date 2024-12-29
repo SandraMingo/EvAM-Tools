@@ -38,7 +38,7 @@ opts_knit$set(stop_on_error = 2L)
 \section{Introducción a Mutual Hazard Networks (MHN)}
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
 
-Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Este modelo se basa en las cadenas oculas de Markov para modelar la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros (modelo estocástico donde se permite que las mutaciones puedan aumentar o disminuir la probabilidad de otras mutaciones o eventos). Un supuesto del modelo es que el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. No obstante, los MHN se han modificado recientemente para corregir el sesgo de observación o selección \cite{Schill2024}. Así, el acto de observar un acontecimiento se considera parte del proceso que se está modelando. Esto significa que el momento de una observación depende de los acontecimientos que hayan tenido lugar antes. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana.Es importante corregir por este sesgo ya que esta variables (observación del tumor) es lo que se conoce como "colisionador", es decir, una variable que está influenciada por dos factores (en este caso, tanto las mutacionees genéticas como las circunstancias externas favorecen la observación del tumor). Si no consideramos esto podríamos tener sesgos, prediciendo que ciertas mutacione suprimen otra cuando en realidad no lo hacen además de perdernos relaciones causales reales. Para corregir este sesgo se usan fórumlas tensoriales avanzadas (referencia Overcoming Observation Bias...).
+Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Este modelo se basa en las cadenas oculas de Markov para modelar la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros (modelo estocástico donde se permite que las mutaciones puedan aumentar o disminuir la probabilidad de otras mutaciones o eventos). Un supuesto del modelo es que el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. No obstante, los MHN se han modificado recientemente para corregir el sesgo de observación o selección \cite{Schill2024}. Así, el acto de observar un acontecimiento se considera parte del proceso que se está modelando. Esto significa que el momento de una observación depende de los acontecimientos que hayan tenido lugar antes. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana.Es importante corregir por este sesgo ya que esta variables (observación del tumor) es lo que se conoce como "colisionador", es decir, una variable que está influenciada por dos factores (en este caso, tanto las mutacionees genéticas como las circunstancias externas favorecen la observación del tumor). Si no consideramos esto podríamos tener sesgos, prediciendo que ciertas mutacione suprimen otra cuando en realidad no lo hacen además de perdernos relaciones causales reales. Para corregir este sesgo se usan fórumlas tensoriales avanzadas \cite{OvercomingObservationBias}.
 
 %Las suponisciones del modelo son acumulación irreversibles, independiencia de las muestras y homogeinicidad de los datos. 
 %Limitación de MHN --> no puede trbaajr con interacción de más de tres??
@@ -101,14 +101,14 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{plot\_evam}: Esta función genera representaciones gráficas de modelos ajustados EvAM y sus relaciones, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
 \item \code{random\_evam}: Esta función genera un modelo aleatorio de un tipo especificado, pudiendo personalizar parámetros como el número de genes, densidad del grafo, pesos, y distribución de errores. Devuelve un objeto con la misma estrutura que la función evam. Esta función puede es util para simulaciones y pruebas.
 \item \code{runShiny}: Inicia la aplicación web Shiny integrada para explorar modelos de forma interactiva.
-\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random_evam).Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
-\item \code{evamtools\-deprecated}: Son funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
+\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random\_evam).Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
+\item \code{evamtools\_deprecated}: Son funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
     \begin{itemize}
-        \item \code{plot_CPMs}:
-        \item \code{sample_CPMs}:
+        \item \code{plot\_CPMs}:
+        \item \code{sample\_CPMs}:
     \end{itemize}
-\end{itemize}
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete.Es utilizada internamente por runShiny.
+\end{itemize}
 
 %Comparar funcionalidadesde web y R (además de con python)
 
@@ -142,12 +142,12 @@ Con este propósito, el paquete \code{reticulate} de R proporciona una interfaz 
 %También existe un paquete en Python (rpy2) que permite la integración en la dirección inversa, ejecutando código de R desde Python.
 
 En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al código de Python relacionado con el paquete \code{mhn} desde R. Los pasos seguidos fueron:
-
-- Configuración del entorno: Asegurar que Python esté instalado y accesible desde R mediante la configuración del intérprete Python en \code{reticulate} en la imagen de Docker.
-- Instalación del paquete \code{mhn} en Python
-- Ejecución de código de Python desde R: Llamar a las funciones del paquete \code{mhn} 
-- Transferencia de datos entre lenguajes: Probar la transferencia de datos y verificar la correcta ejecución de las funciones.
-
+\begin{enumerate}
+\item Configuración del entorno: Asegurar que Python esté instalado y accesible desde R mediante la configuración del intérprete Python en \code{reticulate} en la imagen de Docker.
+\item Instalación del paquete \code{mhn} en Python
+\item Ejecución de código de Python desde R: Llamar a las funciones del paquete \code{mhn} 
+\item Transferencia de datos entre lenguajes: Probar la transferencia de datos y verificar la correcta ejecución de las funciones.
+\end{enumerate}
 
 % EN CASO DE QUE LO HICIÉRAMOS: Adicionalmente, hemos intentado implementar la integración inversa, es decir, llamar código de R desde Python, para explorar las capacidades de herramientas como \code{rpy2}. Esto nos permitió comparar la usabilidad y las limitaciones de ambas aproximaciones, observando que.....
 
