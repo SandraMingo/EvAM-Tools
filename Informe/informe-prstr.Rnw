@@ -21,6 +21,7 @@ opts_knit$set(stop_on_error = 2L)
 @
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \maketitle
 
 \tableofcontents
@@ -32,13 +33,25 @@ opts_knit$set(stop_on_error = 2L)
 %\cite{ModellingCancerProgression} -> Modelling cancer progression using Mutual Hazard Network
 %\cite{OvercomingObservationBias} -> Overcoming Observation Bias for Cancer Progression Modeling
 %\cite{Schill2024} -> Correcting for Observation Bias in Cancer Progression Modeling
+<<<<<<< Updated upstream
 %\cite{DiazUriarte2019} -> Every which way? On predicting tumor evolution using cancer progression models
 %\cite{DiazColunga2021} -> Conditional prediction of consecutive tumor evolution using cancer progression models
+=======
+
+\section{Introducción a Mutual Hazard Networks}
+Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
+
+Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Modelan la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros. Un supuesto del modelo es que el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. No obstante, los MHN se han modificado recientemente para corregir el sesgo por observación \cite{Schill2024}. Así, el acto de observar un acontecimiento se considera parte del proceso que se está modelando. Esto significa que el momento de una observación depende de los acontecimientos que hayan tenido lugar antes. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana.
+
+En este contexto de redes de riesgo mutuo, la matriz $\Theta$ captura la relación de interdependencia entre nodos (representando eventos), donde los riesgos de ciertos nodos afectan directamente a los riesgos de otros \cite{ModellingCancerProgression}. Así, la matriz describe las interdependencias y las intensidades de estas interacciones entre los eventos. Cada elemento $\Theta_{ij}$ representa el impacto directo del evento $j$ sobre el evento $i$ en términos del riesgo o probabilidad de un evento perjudicial. La diagonal representa los riesgos sin considerar interdependencias.
+
+%Los datos se deben encontrar en una matriz en la cual las filas representan pacientes o sujetos y las columnas genes/SNPs/etc. Cada celda puede contener un 1 si el evento, alteración o mutación está presente o un 0 si no fue observado -> Evamtools methods y FAQ
+>>>>>>> Stashed changes
 
 \section{Introducción a Mutual Hazard Networks (MHN)}
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
 
-Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Este modelo se basa en las cadenas oculas de Markov para modelar la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros (modelo estocástico donde se permite que las mutaciones puedan aumentar o disminuir la probabilidad de otras mutaciones o eventos). Un supuesto del modelo es que el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. No obstante, los MHN se han modificado recientemente para corregir el sesgo de observación o selección \cite{Schill2024}. Así, el acto de observar un acontecimiento se considera parte del proceso que se está modelando. Esto significa que el momento de una observación depende de los acontecimientos que hayan tenido lugar antes. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana.Es importante corregir por este sesgo ya que esta variables (observación del tumor) es lo que se conoce como "colisionador", es decir, una variable que está influenciada por dos factores (en este caso, tanto las mutacionees genéticas como las circunstancias externas favorecen la observación del tumor). Si no consideramos esto podríamos tener sesgos, prediciendo que ciertas mutacione suprimen otra cuando en realidad no lo hacen además de perdernos relaciones causales reales. Para corregir este sesgo se usan fórumlas tensoriales avanzadas \cite{OvercomingObservationBias}.
+Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Este modelo se basa en las cadenas oculas de Markov para modelar la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros (modelo estocástico donde se permite que las mutaciones puedan aumentar o disminuir la probabilidad de otras mutaciones o eventos). Un supuesto del modelo es que el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. No obstante, los MHN se han modificado recientemente para corregir el sesgo de observación o selección \cite{Schill2024}. Así, el acto de observar un acontecimiento se considera parte del proceso que se está modelando. Esto significa que el momento de una observación depende de los acontecimientos que hayan tenido lugar antes. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana.Es importante corregir por este sesgo ya que esta variables (observación del tumor) es lo que se conoce como "colisionador", es decir, una variable que está influenciada por dos factores (en este caso, tanto las mutacionees genéticas como las circunstancias externas favorecen la observación del tumor). Si no consideramos esto podríamos tener sesgos, prediciendo que ciertas mutacione suprimen otra cuando en realidad no lo hacen además de perdernos relaciones causales reales. Para corregir este sesgo se usan fórmulas tensoriales avanzadas \cite{OvercomingObservationBias}.
 
 %Las suponisciones del modelo son acumulación irreversibles, independiencia de las muestras y homogeinicidad de los datos. 
 %Limitación de MHN --> no puede trbaajr con interacción de más de tres??
@@ -62,10 +75,48 @@ El módulo de Python cuenta con los dos frameworks comentados anteriormente, el 
 
 Se requiere que los datos de input estén en formato de matriz binaria, la cual se puede importar con el módulo \code{pandas} y la función \code{load\_data\_matrix()} o, en caso de que esté en un fichero csv, directamente con \code{load\_data\_from\_csv()}.
 
+<<<<<<< Updated upstream
 Al tratarse de un algoritmo de aprendizaje automático, se requiere penalizar la inferencia de parámetros de modo que, en general, se prefiere un conjunto de parámetros disperso/parsimonioso. El resultado es explicar bien los datos de entrada de entrenamiento con el menor número posible de parámetros para que el modelo siga siendo generalizable a los datos de prueba. Así, los modelos generados son más sencillos e interpretables, evitando el sobreajuste. Para este paso, los autores han establecido dos formas de penalización:
 \begin{itemize}
 \item \textbf{Penalización estándar L1:} penaliza los parámetros individuales, fomentando que muchos de ellos sean exactamente cero. Esto conduce a un modelo disperso en el que sólo permanecen activos los parámetros más importantes. 
 \item \textbf{Penalización simétrica personalizada:} penaliza los pares de parámetros que son simétricos en la matriz $\Theta$ (con respecto a la diagonal). El coste de que ambos parámetros de un par sean distintos de cero equivale a que sólo uno sea distinto de cero. Al fomentar la simetría en el modelo, se puede alinear mejor con las relaciones biológicas, como los efectos epistáticos.
+=======
+Al tratarse de un algoritmo de aprendizaje automático, se requiere penalizar la inferencia de parámetros de modo que, en general, se prefiera un conjunto de parámetros disperso/parsimonioso. El resultado es explicar bien los datos de entrada de entrenamiento con el menor número posible de parámetros para que el modelo siga siendo generalizable a los datos de prueba. Así, los modelos generados son más sencillos e interpretables, evitando el sobreajuste. Para este paso, los autores han establecido dos formas de penalización:
+\begin{itemize}
+\item \textbf{Penalización estándar L1:} penaliza los parámetros individuales, fomentando que muchos de ellos sean exactamente cero. Esto conduce a un modelo disperso en el que sólo permanecen activos los parámetros más importantes. 
+\item \textbf{Penalización simétrica personalizada:} penaliza los pares de parámetros que son simétricos en la matriz $\Theta$ (con respecto a la diagonal). El coste de que ambos parámetros de un par sean distintos de cero equivale a que sólo uno sea distinto de cero. Al fomentar la simetría en el modelo, se puede alinear mejor con las relaciones biológicas, como los efectos epistáticos.
+\end{itemize}
+
+En el artículo \cite{Schill2024}, los autores recomiendan elegir la penalización basándose en el conocimiento previo sobre la estructura de los efectos que se esperan en el tipo de datos con los que se está trabajando. 
+
+El siguiente paso es la elección de hiperparámetros de validación cruzada. Se prueba un rango de diferentes penalizaciones («lambdas») para identificar una que produzca un rendimiento óptimo en los datos retenidos. Se pueden definir los siguientes hiperparámetros: la intensidad mínima y máxima de la penalización («lambda») que se probará (usualmente se espera un lambda de $1/n$, siendo n el número de observaciones, por lo que se escogen un mínimo y máximo alrededor de ese valor), la cantidad de pasos (es decir, la longitud de la secuencia lambda) que hay que dar entre estos límites y la cantidad de folds en que se quieren dividir los datos para la validación cruzada. Se consigue alta precisión probando con un gran rango lambda con pequeños tamaños de paso y utilizando muchos folds, pero requiere más recursos informáticos y más tiempo de computación. Por el contrario, los resultados más rápidos utilizan un rango más estrecho, menos pasos y menos folds, reduciendo el cálculo y sacrificando la precisión a la hora de encontrar la lambda óptima. En el módulo, todo esto se puede especificar en la función \code{lambda\_from\_cv()}.
+
+El último paso es entrenar el modelo final con el lambda óptimo obtenido de la validación cruzada. Esto se consigue con \code{train()}, y los resultados se pueden guardar en formato csv y un fichero log en formato json con \code{result.save()}. El output principal se puede visualizar con \code{result.plot()}, mostrando la matriz $\Theta$ logarítmica de forma predeterminada. 
+
+\subsubsection{Web app: evamtools}
+La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, permitiendo estudiar acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
+
+La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero o metiendo manualmente las frecuencias del genotipo. También se permite generar datos transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. 
+
+Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respectivo histograma. Bajo opciones avanzadas se pueden seleccionar los distintos CPMs a utilizar y personalizar algunos de los parámetros. Los resultados se pueden visualizar en forma de los grafos acíclicos dirigidos o la matriz de MHN, además de la tabla de predicción de los modelos ajustados.
+
+
+\subsubsection{R: evamtools}
+El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos datos que se pueden generar (función \code{random\_evam}) o importar desde un csv. Los CPMs que incluye son Conjunctive Bayesian Networks (CBM), Oncogenic Trees (OT), Disjunctive Bayesian Networks (DBN: OncoBN), Hidden Extended Suppes-Bayes Causal Networks (H-ESBCN) y MHN. 
+
+El paquete cuenta con 10 funciones exportadas:
+\begin{itemize}
+\item \code{evam}: genera un objeto que debería contener información sobre los métodos utilizados.
+\item \code{every\_which\_way\_data}:
+\item \code{ex\_mixed\_and\_or\_xor}:
+\item \code{examples\_csd}: proporciona ejemplos de datos de tipo cross-sectional (sección transversal), que se pueden usar como entrada para probar las funcionalidades del paquete. Esto es útil para experimentar con el paquete sin tener que preparar datos propios.
+\item \code{plot\_CPMs}:
+\item \code{plot\_evam}: genera representaciones gráficas de modelos ajustados EvAM, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
+\item \code{random\_evam}:
+\item \code{runShiny}:
+\item \code{sample\_CMPs}:
+\item \code{sample\_evam}:
+>>>>>>> Stashed changes
 \end{itemize}
 
 En el artículo \cite{Schill2024}, los autores recomiendan elegir la penalización basándose en el conocimiento previo sobre la estructura de los efectos que se esperan en el tipo de datos con los que se está trabajando. 
@@ -102,18 +153,18 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{random\_evam}: Esta función genera un modelo aleatorio de un tipo especificado, pudiendo personalizar parámetros como el número de genes, densidad del grafo, pesos, y distribución de errores. Devuelve un objeto con la misma estrutura que la función evam. Esta función puede es util para simulaciones y pruebas.
 \item \code{runShiny}: Inicia la aplicación web Shiny integrada para explorar modelos de forma interactiva.
 \item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random\_evam).Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
-\item \code{evamtools\_deprecated}: Son funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
+\item \code{evamtools\_deprecated}: Sus funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
     \begin{itemize}
         \item \code{plot\_CPMs}:
         \item \code{sample\_CPMs}:
     \end{itemize}
-\item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete.Es utilizada internamente por runShiny.
+\item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete. Es utilizada internamente por runShiny.
 \end{itemize}
 
 %Comparar funcionalidadesde web y R (además de con python)
 
 \subsection{Velocidad}
-Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando igual. No obstante, al calcular el modelo con \code{evam}, el tiempo que tarda en ejecutarse es inferior con los datos en forma de matriz. 
+Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando de igual manera. No obstante, al calcular el modelo con \code{evam}, el tiempo que tarda en ejecutarse es inferior con los datos en forma de matriz. 
 
 
 %Diseña experimentos sencillos:
@@ -123,6 +174,13 @@ Dentro del paquete de evamtools en R, los datos se pueden manejar como data fram
 
 \subsection{Ventajas y desventajas}
 En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo.
+<<<<<<< Updated upstream
+=======
+
+Respecto a la web app, es intuitiva de utilizar y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}.
+
+Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos y ser utilizable para análisis sistemáticos. 
+>>>>>>> Stashed changes
 
 Respecto a la web app, es intuitiva de utilizar y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}.
 
@@ -133,9 +191,9 @@ Finalmente, el paquete de R es la herramienta más completa de las analizadas en
 
 %Poner algo tipo: debido a que en Pyhton existen ciertas funcionalidades que no existen en evamtools, se podrían implementar estas o llamar a Python desde R....
 
-En muchas ocasions, es necesario combinar herramientas y librerías de diferentes lenguajes de programación con el objetivo de aprovechar sus fortalezas específicas. La ingración entre los lenguajes de Python y R puede ser clave, permitiendo así disponer de las funcionalidades de ambos paquetes (\code{mhn} y \code{evamtools}) para poder desarrollar proyectos más complejos.
+En muchas ocasiones, es necesario combinar herramientas y librerías de diferentes lenguajes de programación con el objetivo de aprovechar sus fortalezas específicas. La integración entre los lenguajes de Python y R puede ser clave, permitiendo así disponer de las funcionalidades de ambos paquetes (\code{mhn} y \code{evamtools}) para poder desarrollar proyectos más complejos.
 
-Con este propósito, el paquete \code{reticulate} de R proporciona una interfaz versátil que permite ejecutar código de Python directamente desde el entorno de R. \code{reticulate} facilita la interoperabilidad entre ambos lenguajes, permitiendo acceder a librerías, funciones y objetos de Python como si fueran nativos en R. Esta capacidad resulta especialmente útil cuando se desean utilizar paquetes especializados de Python, como \code{mhn}, dentro de un flujo de trabajo basado en R. \code{reticulate} es la opción elegida debido a su simplicidad, flexibilidad y su facilidad de acceso a las numerosas librerías de Python. 
+Con este propósito, el paquete \code{reticulate} de R proporciona una interfaz versátil que permite ejecutar código de Python directamente desde el entorno de R. \code{reticulate} facilita la interoperabilidad entre ambos lenguajes, permitiendo acceder a librerías, funciones y objetos de Python como si fueran nativos en R. Esta capacidad resulta especialmente útil cuando se desean utilizar paquetes especializados de Python, como \code{mhn}, dentro de un flujo de trabajo basado en R. \code{reticulate} es la opción elegida debido a su simplicidad, flexibilidad y su fácil acceso a las numerosas librerías de Python. 
 
 %Existen alternativas como ejecutar scripts de Python desde R mediante llamadas al sistema operativo (e.g., system() o system2()) o a través de API REST que comuniquen ambos lenguajes mediante solicitudes HTTP. 
 
