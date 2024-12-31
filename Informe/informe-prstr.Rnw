@@ -162,6 +162,31 @@ En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al có
 %Identificar los puntos donde se podría insertar la lógica de corrección.
 %Consultar el código Python para adaptar las funciones de corrección.
 
+%evamtools -> R -> MHN__ModelConstruction.R
+%Este código define varias funciones clave que probablemente se necesitarán modificar para incorporar un modelo oMHN
+Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero \code{MHN\_\_ModelConstruction.R}, estando relacionado con la construcción y manipulación de la matriz de transición ($Q$) basada en los parámetros de $\Theta$. 
+
+Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
+<<>>=
+Random.Theta <- function(n, sparsity=0){
+  Theta  <- matrix(0,nrow=n+1,ncol=n+1) # Agregar una dimensión adicional
+  
+  diag(Theta)  <- NA
+  nonZeros <- sample(which(!is.na(Theta)), size=((n+1)^2 - (n+1))*(1 - sparsity))
+  
+  Theta[nonZeros] <- rnorm(length(nonZeros))
+  diag(Theta) <- rnorm(n+1) # Ajustar la diagonal
+  
+  return(round(Theta,2))
+}
+@
+
+A continuación se deben incluir las interacciones entre eventos y observación, modificando \code{Q.Subdiag} para tener en cuenta la nueva fila y columna en $\Theta$.
+
+%3. Actualizar la construcción de Q: Modifica Build.Q para incorporar las interacciones del evento de observación con el resto de los eventos. Asegúrate de que el cálculo de la diagonal de Q refleje las tasas de salida del evento de observación.
+%4. Optimización inicial (Learn.Indep): Ajusta esta función para que también inicialice los parámetros del evento de observación. 
+%5.Simulación y ajuste de parámetros dinámicos: Si la observación tiene tasas que varían dinámicamente, añade lógica para actualizar Θ o Q en función de los datos observados.
+
 \printbibliography
 
 
