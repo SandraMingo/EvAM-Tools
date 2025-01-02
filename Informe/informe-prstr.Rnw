@@ -107,7 +107,7 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{random\_evam}: Esta función genera un modelo aleatorio de un tipo especificado, pudiendo personalizar parámetros como el número de genes, densidad del grafo, pesos, y distribución de errores. Devuelve un objeto con la misma estrutura que la función evam. Esta función puede es util para simulaciones y pruebas.
 \item \code{runShiny}: Inicia la aplicación web Shiny integrada para explorar modelos de forma interactiva.
 \item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random\_evam).Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
-\item \code{evamtools\_deprecated}: Sus funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
+\item \code{evamtools-deprecated}: Sus funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
     \begin{itemize}
         \item \code{plot\_CPMs}: Crea gráficos ajustados de EvAMs, utilizando los modelos ajustados y gráficos personalizados para las tasas y probabilidades de transición.
         \item \code{sample\_CPMs}: Obtiene muestras de los genotipos de los modelos de CPM. Opcionalmente, cuenta los genotipos de transición. Para todos los métodos excepto OT  y OncoBN se puede solicitar \code{obs\_genotype\_transitions}, aunque se quitó de la versión web, por su poco uso y el aumento en el tiempo de procesado (por ello ya no se utiliza al tomar la muestra). Esta originalmente se obtiene contando las transiciones entre genotipos dos a dos en las simulaciones de Cadena de Markov de tiempo continuo. También se obtienen \code{state counts} al contar cuantas veces un genotipo fue visitado durante este proceso.
@@ -164,6 +164,7 @@ En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al có
 
 %evamtools -> R -> MHN__ModelConstruction.R
 %Este código define varias funciones clave que probablemente se necesitarán modificar para incorporar un modelo oMHN
+%%%COMPROBAR TODO BIEN, NO ESTÁ LIBRE DE ERRORES 
 Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero \code{MHN\_\_ModelConstruction.R}, estando relacionado con la construcción y manipulación de la matriz de transición ($Q$) basada en los parámetros de $\Theta$. 
 
 Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
@@ -183,7 +184,66 @@ Random.Theta <- function(n, sparsity=0){
 
 A continuación se deben incluir las interacciones entre eventos y observación, modificando \code{Q.Subdiag} para tener en cuenta la nueva fila y columna en $\Theta$.
 
-%3. Actualizar la construcción de Q: Modifica Build.Q para incorporar las interacciones del evento de observación con el resto de los eventos. Asegúrate de que el cálculo de la diagonal de Q refleje las tasas de salida del evento de observación.
+<<>>=
+Q.Subdiag <- function(Theta, i) {
+  row <- Theta[i,]
+  n <- length(row) - 1  # Excluye el evento de observación
+  s <- exp(row[i])  # Base rate Theta_ii
+
+  # Caso especial: si i es el evento de observación
+  if (i == n + 1) {
+    # Define cómo el evento de observación afecta a los demás
+    s_obs <- exp(row[1:n])  # Interacciones con los eventos principales
+    return(c(s, s_obs))
+  }
+
+  # Caso general: eventos no relacionados con la observación
+  for (j in 1:(n + 1)) {
+    if (i != j) {
+      # Multiplica la tasa base por la interacción Theta_ij
+      s <- c(s, s * exp(row[j]))
+    }
+  }
+
+  return(s)
+}
+@
+
+Lo siguiente es actualizar la construcción de Q. Para ello, hay que incorporar a la función \code{Build.Q} las interacciones del evento de observación con el resto de los eventos. 
+
+<<>>=
+Build.Q <- function(Theta) {
+  n <- nrow(Theta) - 1  # Número de eventos sin incluir el de observación
+  Subdiags <- list()
+  
+  # Construir las subdiagonales incluyendo el evento de observación
+  for (i in 1:(n + 1)) {
+    subdiag <- Q.Subdiag(Theta, i)
+    expected_length <- 2^(n + 1 - i)  # Tamaño esperado de la subdiagonal
+    Subdiags[[i]] <- ifelse(length(subdiag) >= expected_length,
+                            subdiag[1:expected_length],
+                            c(subdiag, rep(0, expected_length - length(subdiag)))
+    )
+  }
+  
+  # Crear la matriz de transición esparsa
+  Q <- Matrix::bandSparse(
+    2^(n + 1),               # Tamaño de la matriz (incluye observación)
+    k = -2^(0:n),            # Posiciones de las subdiagonales
+    diagonals = Subdiags     # Subdiagonales calculadas
+  )
+  
+  # Calcular la diagonal principal (tasas de salida)
+  diag(Q) <- 0  # Inicializa la diagonal principal en 0
+  for (i in 1:(2^(n + 1))) {
+    diag(Q)[i] <- -sum(Q[i, -i], na.rm = TRUE)  # Suma negativa de las tasas de salida
+  }
+  
+  return(Q)
+}
+
+@
+
 %4. Optimización inicial (Learn.Indep): Ajusta esta función para que también inicialice los parámetros del evento de observación. 
 %5.Simulación y ajuste de parámetros dinámicos: Si la observación tiene tasas que varían dinámicamente, añade lógica para actualizar Θ o Q en función de los datos observados.
 
