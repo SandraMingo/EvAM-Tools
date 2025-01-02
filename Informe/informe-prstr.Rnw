@@ -84,6 +84,7 @@ El último paso es entrenar el modelo final con el lambda óptimo obtenido de la
 %¿Qué datos requieren? ¿En qué formato están las entradas/salidas?
 %¿Cómo funciona el sesgo de corrección en la práctica?
 
+
 \subsubsection{Web app: evamtools}
 La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, permitiendo estudiar acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
 
