@@ -111,10 +111,11 @@ calculate_c_lambda <- function(dataframe, n_steps, n_folds, penalty = 'L1'){
   py$n_cv_steps <- n_steps
   py$n_cv_folds <- n_folds
   py$type_penalty <- penalty
+  
   py_run_string("
   
 import numpy
-from mhn.optimizers import oMHNOptimizer, cMHNOptimizer
+from mhn.optimizers import cMHNOptimizer
 
 #Convertir n_cv_steps y n_cv_folds en enteros
 n_cv_steps = int(n_cv_steps)
@@ -131,7 +132,7 @@ if type_penalty == 'L1':
   cMHN_opt.set_penalty(cMHNOptimizer.Penalty.L1)
 
 elif type_penalty == 'SYM_SPARSE':
-  oMHN_opt.set_penalty(oMHNOptimizer.Penalty.SYM_SPARSE)
+  cMHN_opt.set_penalty(cMHNOptimizer.Penalty.SYM_SPARSE)
   
 else:
   print('Type of penalty not valid')
@@ -158,7 +159,73 @@ cMHN_lambda = cMHN_opt.lambda_from_cv(
    
 }
 
-lambda_cMHN <-calculate_c_lambda(data_500, 4, 5, 'SYM_SPARSE')
+cMHN_lambda <-calculate_c_lambda(data_500, 4, 5, 'SYM_SPARSE')
 
 c_modelo <- evam(data_500, methods = c('MHN'), mhn_opts = list(lambda = cMHN_lambda))
 c_modelo$MHN_theta
+
+
+
+####################################################################################################
+#####################################################################################################
+#####################################################################################################
+#Intentar crear funcion
+calculate_o_lambda <- function(dataframe, n_steps, n_folds, penalty = 'L1'){
+  
+  py$input <- dataframe
+  py$n_cv_steps <- n_steps
+  py$n_cv_folds <- n_folds
+  py$type_penalty <- penalty
+  
+  py_run_string("
+  
+import numpy
+from mhn.optimizers import oMHNOptimizer
+
+#Convertir n_cv_steps y n_cv_folds en enteros
+n_cv_steps = int(n_cv_steps)
+n_cv_folds = int(n_cv_folds)
+
+# Inicializar los optimizadores
+oMHN_opt = oMHNOptimizer()
+
+#Introducimos los datos
+oMHN_opt.load_data_matrix(input)
+
+
+if type_penalty == 'L1':
+  oMHN_opt.set_penalty(oMHNOptimizer.Penalty.L1)
+
+elif type_penalty == 'SYM_SPARSE':
+  oMHN_opt.set_penalty(oMHNOptimizer.Penalty.SYM_SPARSE)
+  
+else:
+  print('Type of penalty not valid')
+  raise ValueError
+
+
+import numpy as np
+
+lambda_min = 0.1 / len(input)
+lambda_max = 100 / len(input)
+
+lambda_sequence = np.exp(np.linspace(
+    np.log(lambda_min + 1e-10), np.log(lambda_max + 1e-10), n_cv_steps))
+    
+oMHN_opt.set_device(oMHNOptimizer.Device.CPU)
+
+oMHN_lambda = oMHN_opt.lambda_from_cv(
+    lambda_min=lambda_min, lambda_max=lambda_max, steps=n_cv_steps, nfolds=n_cv_folds, show_progressbar=True)
+
+")
+  lambda <- py$oMHN_lambda
+  
+  return (lambda)
+  
+}
+
+oMHN_lambda <-calculate_o_lambda(data_500, 4, 5, 'SYM_SPARSE')
+
+o_modelo <- evam(data_500, methods = c('MHN'), mhn_opts = list(lambda = oMHN_lambda))
+o_modelo$MHN_theta
+
