@@ -181,6 +181,13 @@ evam_input_df$MHN_theta
 # Tarda 0.209
 
 
+evam_input_df <- evam(input_df, methods = "MHN", cores = 7)
+evam_input_df$MHN_theta
+
+# Tarda 0.152
+
+
+
 #############
 # Matriz
 evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 1)
@@ -205,6 +212,113 @@ evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 4)
 evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
 
 # Tarda 0.29
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 7)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 0.156
+
+
+
+
+################################################################################
+################################################################################
+###### Repetimos los tiempos pero con una base de datos grande:
+
+# Leer el archivo CSV como un data frame (como demo mhn Python)
+input_df <- read.csv('LUAD_n12.csv')
+
+# Convertir el data frame a una matriz
+input_matrix <- as.matrix(input_df) 
+
+### Probamos con evam, sin modificar cores
+
+# Dataframe 
+evam_input_df <- evam(input_df, methods = "MHN") ##No usar este si la mustra es muy grande
+evam_input_df$MHN_theta
+evam_input_df$MHN_trans_mat
+
+# Tarda 54.359
+
+
+#############
+# Matriz
+evam_input_matrix <- evam(input_matrix, methods = "MHN")
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 53.017
+
+
+#######################################
+### Vamos a ver si hay alguna diferencia en el tiempo de procesado según el nº de cores.
+### Probamos con evam, modificando cores = 1, = 2, = 3, = 4
+
+rm(list = ls())  ## No sé si ayudará borrar y cargar los datos cada vez
+input_df <- read.csv('LUAD_n12.csv')
+input_matrix <- as.matrix(input_df) 
+
+# Dataframe 
+evam_input_df <- evam(input_df, methods = "MHN", cores = 1)
+evam_input_df$MHN_theta
+
+# Tarda 53.48
+
+
+evam_input_df <- evam(input_df, methods = "MHN", cores = 2)
+evam_input_df$MHN_theta
+
+# Tarda 53.237
+
+
+evam_input_df <- evam(input_df, methods = "MHN", cores = 3)
+evam_input_df$MHN_theta
+
+# Tarda 53.34
+
+
+evam_input_df <- evam(input_df, methods = "MHN", cores = 4)
+evam_input_df$MHN_theta
+
+# Tarda 49.845
+
+
+evam_input_df <- evam(input_df, methods = "MHN", cores = 7)
+evam_input_df$MHN_theta
+
+# Tarda 48.871
+
+
+
+#############
+# Matriz
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 1)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 51.872
+
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 2)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 52.296
+
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 3)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 49.072
+
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 4)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 50.542
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 7)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 50.054
+
 
 
 
