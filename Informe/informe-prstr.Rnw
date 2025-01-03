@@ -159,7 +159,7 @@ En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al có
 En Python, se nombra cMHN como el modelo clásico de MHN, el cual es el implementado en \code{evamtools}. Por ello, hemos querido comparar los resultados de ambas formas, utilizando el mismo dataset en Python y en R. Los resultados han mostrado la misma tendencia en ambas opciones (relación positiva o negativa entre los genes), aunque los valores concretos varían. Al comparar los dos códigos, la diferencia radica en el cálculo de un lambda óptimo ajustado a los datos en el caso de Python, mientras que \code{evamtools} permite especificar un lambda y, en caso contrario, utiliza el ajuste genérico de $1/n$. Al añadir manualmente el valor de lambda calculado por \code{mhn} en \code{evam}, los resultados de la matriz en ambos paquetes sí son idénticos. 
 
 <<eval=FALSE>>=
-##CÓDIGO DE DANI
+##CÓDIGO UTILIZADO
 
 # Cargar el paquete 'reticulate'
 library("reticulate")
