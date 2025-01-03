@@ -119,7 +119,7 @@ El paquete cuenta con 10 funciones exportadas:
 %Comparar funcionalidades de web y R (además de con python)
 
 \subsection{Velocidad}
-Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando de igual manera. No obstante, al calcular el modelo con \code{evam}, el tiempo que tarda en ejecutarse es inferior con los datos en forma de matriz. 
+Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando de igual manera y sin cambios aparentes en el tiempo de ejecución. La función \code{evam} permite especificar el número de núcleos a utilizar para la computación del modelo. Tras medir el tiempo de ejecución del modelo con tres datasets de distintos tamaños (81, 500 y 3662 observaciones con 6, 12 y 12 genes respectivamente), se puede ver una ligera tendencia de que, a mayor número de núcleos, el tiempo de computación va descendiendo. No obstante, al alcanzar una cierta cantidad de núcleos, que es diferente para distintos ordenadores, el tiempo de ejecución deja de mostrar la tendencia descrita. 
 
 %Diseña experimentos sencillos:
 %Usa datasets de tamaño pequeño, mediano y grande.
@@ -127,11 +127,11 @@ Dentro del paquete de evamtools en R, los datos se pueden manejar como data fram
 % Velocidad con/sin CUDA.
 
 \subsection{Ventajas y desventajas}
-En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo.
+En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo. Adicionalmente, el módulo de Python parece tener problemas con ficheros de datos relativamente pequeños debido al cálculo del lambda óptimo que realiza, como ocurre con el documento de \code{BRCA\_ba\_s.csv}.
 
-Respecto a la web app, es intuitiva de utilizar y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}.
+Respecto a la web app, es intuitiva de utilizar gracias a su tutorial y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}. Se muestra un aviso cuando el fichero de entrada cuenta con más de 7 genes, limitación que no está presente en el paquete de R. 
 
-Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos y ser utilizable para análisis sistemáticos. 
+Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos y ser utilizable para análisis sistemáticos. Sin embargo, no cuenta con la última versión de MHN corregida por el sesgo del colisionador. 
 
 \section {Exploración de posibles integraciones}
 \subsection{Integración del código en Python en R (Evamtools)}
@@ -156,6 +156,15 @@ En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al có
 
 % EN CASO DE QUE LO HICIÉRAMOS: Adicionalmente, hemos intentado implementar la integración inversa, es decir, llamar código de R desde Python, para explorar las capacidades de herramientas como \code{rpy2}. Esto nos permitió comparar la usabilidad y las limitaciones de ambas aproximaciones, observando que.....
 
+En Python, se nombra cMHN como el modelo clásico de MHN, el cual es el implementado en \code{evamtools}. Por ello, hemos querido comparar los resultados de ambas formas, utilizando el mismo dataset en Python y en R. Los resultados han mostrado la misma tendencia en ambas opciones (relación positiva o negativa entre los genes), aunque los valores concretos varían. Al comparar los dos códigos, la diferencia radica en el cálculo de un lambda óptimo ajustado a los datos en el caso de Python, mientras que \code{evamtools} permite especificar un lambda y, en caso contrario, utiliza el ajuste genérico de $1/n$. Al añadir manualmente el valor de lambda calculado por \code{mhn} en \code{evam}, los resultados de la matriz en ambos paquetes sí son idénticos. 
+
+<<eval=FALSE>>=
+##CÓDIGO DE DANI
+
+
+
+
+@
 
 \subsection{Modificar evamtools para incluir la corrección del sesgo}
 %Pasos a seguir:
