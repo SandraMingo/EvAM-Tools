@@ -238,7 +238,9 @@ evam_input_df <- evam(input_df, methods = "MHN") ##No usar este si la mustra es 
 evam_input_df$MHN_theta
 evam_input_df$MHN_trans_mat
 
-# Tarda 54.359
+# Tarda 54.359 LUAD
+# Tarda 52.138 LUAD_500
+# Tarda 0.221 BRCA
 
 
 #############
@@ -257,35 +259,68 @@ rm(list = ls())  ## No sé si ayudará borrar y cargar los datos cada vez
 input_df <- read.csv('LUAD_n12.csv')
 input_matrix <- as.matrix(input_df) 
 
+##y el otro:
+input_df <- read.csv('LUAD_500.csv')
+
+############
+#Probamos la función:
+#
+
 # Dataframe 
 evam_input_df <- evam(input_df, methods = "MHN", cores = 1)
 evam_input_df$MHN_theta
 
-# Tarda 53.48
+# Tarda 53.48 LUAD
+# Tarda 50.872 LUAD_500
+# Tarda 0.331 BRCA
 
 
 evam_input_df <- evam(input_df, methods = "MHN", cores = 2)
 evam_input_df$MHN_theta
 
-# Tarda 53.237
+# Tarda 53.237 LUAD
+# Tarda 47.513 LUAD_500
+# Tarda 0.136 BRCA
 
 
 evam_input_df <- evam(input_df, methods = "MHN", cores = 3)
 evam_input_df$MHN_theta
 
-# Tarda 53.34
+# Tarda 53.34 LUAD
+# Tarda 49.798 LUAD_500
+# Tarda 0.146 BRCA
 
 
 evam_input_df <- evam(input_df, methods = "MHN", cores = 4)
 evam_input_df$MHN_theta
 
-# Tarda 49.845
+# Tarda 49.845 LUAD
+# Tarda 49.689 LUAD_500
+# Tarda 0.188 BRCA
+
+
+evam_input_df <- evam(input_df, methods = "MHN", cores = 5)
+evam_input_df$MHN_theta
+
+# Tarda 59.316 LUAD
+# Tarda 52.229 LUAD_500
+# Tarda 0.283 BRCA
+
+
+evam_input_df <- evam(input_df, methods = "MHN", cores = 6)
+evam_input_df$MHN_theta
+
+# Tarda 61.362 LUAD
+# Tarda 51.777 LUAD_500
+# Tarda 0.178 BRCA
 
 
 evam_input_df <- evam(input_df, methods = "MHN", cores = 7)
 evam_input_df$MHN_theta
 
-# Tarda 48.871
+# Tarda 48.871 LUAD
+# Tarda 52.208 LUAD_500
+# Tarda 0.353 BRCA
 
 
 
@@ -313,6 +348,19 @@ evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 4)
 evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
 
 # Tarda 50.542
+
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 5)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 55.692
+
+
+evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 6)
+evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
+
+# Tarda 53.852
+
 
 evam_input_matrix <- evam(input_matrix, methods = "MHN", cores = 7)
 evam_input_matrix$MHN_theta   #Comprobamos que es el mismo resultado que el dataframe
@@ -591,6 +639,267 @@ file.choose()
 use_python("/home/rstudio/Trabajo_R2024_master/demo/demo.ipynb")
 #### Da error
 ## Es porque lo que hay que introducir no es el path del archivo, sino de "python" en sí.
+
+
+########################################################
+########################################################
+########################################################
+############# Reticulate con código de Tania. 
+
+# Vamos a comparar el resultado de cMHN con reticulate y con evam
+
+# Cargar el paquete 'reticulate'
+library("reticulate")
+
+# Configurar reticulate para usar Python 3
+use_python("/usr/bin/python3", required = TRUE)
+
+# Verificar la configuración de Python
+py_config()
+
+###
+
+# Importar librerías a usar numpy y matplotlib
+mhn <- import("mhn")
+np <- import("numpy")
+plt <- import("matplotlib.pyplot")
+random <- import("random")
+
+# Usar reticulate para obtener el atributo __version__ del paquete mhn
+mhn_version <- py_get_attr(mhn, "__version__")
+
+# Imprimir la versión
+print(mhn_version)
+
+###
+
+# Cargar el archivo CSV en un dataframe que creó Claudia en R
+data <- read.csv('LUAD_500.csv')
+
+# Asegurarse de que los datos se carguen correctamente
+head(data)
+
+py_run_string("
+import random
+import pandas as pd
+
+input = pd.read_csv('LUAD_500.csv')
+print (input.head())
+
+print('Number of observations:', len(input)) 
+print('Number of events:', len(input.columns))
+
+print('Event frequencies:')
+input.sum(axis=0) / len(input)
+
+print('istribution of active event counts across observations:')
+input.sum(axis=1).value_counts().sort_index()
+
+# The dataset is a little large to be used completely in this notebook, so let's only take a part of the data:
+
+# Establecer semilla para reproducibilidad
+random.seed(6)
+
+# Crear un subconjunto aleatorio de datos (en ese caso, no)
+# input_subset = input.sample(n=500)
+input_subset = input
+
+# Generar resultados
+result = input_subset.sum(axis=1).value_counts().sort_index()
+print (result)
+")
+
+# Convertir el dataframe de R a un dataframe de pandas en Python
+py$data <- r_to_py(data)  # Convertir el dataframe de R a Python
+
+# Verificar cómo está estructurado el DataFrame en Python
+py_run_string("
+print(result)
+")
+
+# Acceder a los resultados de Python en R
+input_subset_python <- py$input_subset
+
+# Convertir la Serie de pandas a una lista en Python
+py_run_string("
+result_list = result.tolist()  # Convertir la Serie a lista
+")
+# Acceder a la lista desde R
+result_list <- py$result_list
+print(result_list)
+
+
+# Ejecutar las funciones de Python usando reticulate
+py_run_string("from mhn.optimizers import cMHNOptimizer")
+py_run_string("cMHN_opt = cMHNOptimizer()")
+
+# Cargar los datos en los optimizadores
+py_run_string("cMHN_opt.load_data_matrix(input_subset)")
+
+# Establecer las penalizaciones para cMHN
+py_run_string("cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
+
+# Verificar si se cargaron correctamente los datos y la configuración
+py_run_string("print(cMHN_opt)")
+
+###
+
+py_run_string("
+import random
+import pandas as pd
+from mhn.optimizers import cMHNOptimizer
+
+# Establecer la semilla para reproducibilidad
+random.seed(6)
+
+# Convertir el dataframe a un objeto manejable en Python
+input = data
+
+# Estadísticas básicas del conjunto de datos
+print('Number of observations:', len(input))  # Número de individuos
+print('Number of events:', len(input.columns))  # Número de eventos
+
+print('Event frequencies:')
+print(input.sum(axis=0) / len(input))  # Frecuencias de eventos
+
+print('Distribution of active event counts across observations:')
+print(input.sum(axis=1).value_counts().sort_index())  # Distribución
+
+# Crear un subconjunto aleatorio de los datos
+# input_subset = input.sample(n=500)
+result = input_subset.sum(axis=1).value_counts().sort_index()
+
+# Inicializar el optimizador
+cMHN_opt = cMHNOptimizer()
+
+# Cargar los datos en el optimizador
+cMHN_opt.load_data_matrix(input)
+
+# Establecer las penalizaciones para cMHN
+cMHN_opt.set_penalty(cMHNOptimizer.Penalty.L1)
+
+# Verificar la configuración del optimizador
+print(cMHN_opt)
+")
+
+# Si necesitas acceder a 'result' desde R
+result <- py$result
+print(result)
+
+######
+##Esta parte nos interesa para obtener la lambda:
+
+py_run_string('
+lambda_min= 0.1 / len(input_subset)
+lambda_max = 100 / len(input_subset)
+
+print("Minimum lambda:", lambda_min)
+print("Maximum lambda:", lambda_max)
+
+n_cv_steps = 5
+
+import numpy as np
+
+lambda_sequence = np.exp(np.linspace(
+    np.log(lambda_min + 1e-10), np.log(lambda_max + 1e-10), n_cv_steps))
+
+print("Lambda sequence:")
+lambda_sequence
+
+n_cv_folds = 3
+
+cMHN_opt.set_device(cMHNOptimizer.Device.CPU)
+
+cMHN_lambda = cMHN_opt.lambda_from_cv(
+    lambda_min=lambda_min, lambda_max=lambda_max, steps=n_cv_steps, nfolds=n_cv_folds,
+    show_progressbar=True)
+
+import matplotlib.pyplot as plt
+
+# plot original lambda sequence
+plt.scatter(lambda_sequence, np.full(len(lambda_sequence), 1), color="black")
+
+# plot cross-validated lambdas
+plt.scatter(cMHN_lambda, 2, color="red")
+
+# labels
+plt.text(cMHN_lambda, 1.9, "cMHN", ha="center")
+
+# log scale
+plt.xscale("log")
+plt.yticks([])
+plt.ylabel("")
+plt.show()
+')
+
+# Obtener las secuencias de lambdas desde Python a R si necesitas usarlas
+lambda_sequence <- py$lambda_sequence
+cMHN_lambda <- py$cMHN_lambda
+
+### Con esto abríamos obtenido la lambda
+
+#####
+## ¿Esta parte la consideráis importante?
+
+py_run_string("
+# train cMHN
+cMHN_opt.train(lam=cMHN_lambda)
+# save output
+cMHN_opt.result.save(filename='cMHN.csv')
+
+import json
+import pprint
+
+with open('cMHN_meta.json') as f:
+    cMHN_log = json.load(f)
+
+pprint.pprint(cMHN_log)
+")
+
+# Comprobaremos si de alguna manera cambia el resultado.
+######
+
+# Gráfico cMHN
+py_run_string("import matplotlib.pyplot as plt")
+
+py_run_string("cMHN_opt.result.plot()")
+
+# Mostrar el gráfico generado
+py_run_string("plt.show()")
+
+#### Mostramos simplemente la matriz generada
+py_run_string("print(cMHN_opt.result)")
+
+
+###
+#####
+#######
+## Ahora probamos los resultados obtenidos con la función evam
+
+library("evamtools")
+
+datos <- evam(data, methods = "MHN")
+datos$MHN_theta      # Es la tabla cMHN
+
+datos$MHN_exp_theta  # Es la tabla tras hacer e^
+
+#otras tablas son:
+datos$MHN_trans_mat  #No creo que sea nada de lo que buscamos
+datos$MHN_trans_rate_mat #No sé cómo lo saca
+
+##
+matriz_normal <- datos$MHN_theta  # Lo guardamos por si acaso
+
+
+### Repetimos el evam pero utilizaremos la lambda, para ello hay que guardarla en R
+#lambda <- py$cMHN_lambda   # Se haría con esto
+
+?evam
+datos2 <- evam(data, methods = "MHN", mhn_opts = list(lambda = cMHN_lambda))
+datos2$MHN_theta
+
+
+
 
 
 
