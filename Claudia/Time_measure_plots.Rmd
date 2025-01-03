@@ -1,0 +1,103 @@
+---
+title: "Tiempos medidos"
+output: html_document
+date: "2025-01-03"
+---
+
+```{r}
+# Crear el DataFrame manualmente, asegurándose de que todas las columnas tengan la misma longitud.
+dBRCA <- data.frame(
+  Cores = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+  Claudia = c(1.219, 0.122, 0.056, 0.072, 0.079, 0.105, 0.101, 0.067, 0.115, 0.073, 0.116, 0.11, 0.112, 0.12, 0.07, 0.116),
+  Sandra = c(0.232, 0.129, 0.111, 0.099, 0.08, 0.086, 0.093, 0.074, NA, NA, NA, NA, NA, NA, NA, NA),
+  Tania2 = c(0.133, 0.078, 0.08, 0.079, 0.078, 0.079, 0.078, 0.077, 0.077, 0.077, 0.079, 0.079, NA, NA, NA, NA),
+  Dani = c(0.331, 0.136, 0.146, 0.188, 0.283, 0.178, 0.353, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+  #Tiempo_medio = c(0.479, 0.136, 0.124, 0.136, 0.156, 0.139, 0.176, 0.074, 0.067, 0.057, 0.068, 0.047, 0.028, 0.030, 0.018, 0.029)
+)
+
+```
+
+
+```{r}
+# Cargar la librería ggplot2 para gráficos
+library(ggplot2)
+
+# Graficar los datos
+ggplot(dBRCA, aes(x = Cores)) +
+  geom_line(aes(y = Claudia, color = "Claudia")) +
+  geom_line(aes(y = Sandra, color = "Sandra")) +
+  #geom_line(aes(y = Tania, color = "Tania")) +
+  geom_line(aes(y = Tania2, color = "Tania")) +
+  geom_line(aes(y = Dani, color = "Daniel")) +
+  #geom_line(aes(y = Tiempo_medio, color = "Tiempo medio")) +
+  labs(x = "Number of cores in evam()", y = "Time", title = "BRCA2_ba_s.csv data") +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+```{r}
+# Crear el DataFrame manualmente
+data_LUAD_500 <- data.frame(
+  Cores = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+  Claudia = c(52.162, 25.722, 24.886, 21.839, 23.576, 20.139, 25.446, 24.557, 24.481, 25.128, 23.295, 24.624, 25.433, 21.592, 21.615, 23.990),
+  Sandra = c(28.253, 28.49, 26.934, 27.313, 28.965, 26.577, 26.625, 27.991, NA, NA, NA, NA, NA, NA, NA, NA),
+  Tania = c(27.566, 26.188, 25.855, 25.955, 26.249, 26.12, 26.445, 26.791, 26.545, 26.625, 26.059, 26.488, NA, NA, NA, NA),
+  Dani = c(50.872, 57.513, 49.798, 49.689, 52.229, 51.777, 52.208, NA, NA, NA, NA, NA, NA, NA, NA, NA))
+  #Tiempo_medio = c(39.713, 34.478, 31.868, 31.199, 32.755, 31.153, 32.681, 19.835, 12.757, 12.938, 12.339, 12.778, 6.358, 5.398, 5.404, 5.998)
+)
+
+```
+
+
+```{r}
+ggplot(data_LUAD_500, aes(x = Cores)) +
+  geom_line(aes(y = Claudia, color = "Claudia")) +
+  geom_line(aes(y = Sandra, color = "Sandra")) +
+  geom_line(aes(y = Tania, color = "Tania")) +
+  geom_line(aes(y = Dani, color = "Daniel")) +
+  #geom_line(aes(y = Tiempo_medio, color = "Tiempo medio")) +
+  labs(
+    x = "Number of cores in evam()",
+    y = "Time",
+    title = "LUAD_500.csv data"
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
+```
+
+
+
+```{r}
+data_LUAD_n12 <- data.frame(
+  Cores = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16),
+  Claudia = c(69.486, 27.157, 25.812, 24.166, 26.861, 26.923, 27.869, 27.632, 28.274, 25.454, 28.919, 28.507, 26.302, 28.977, 27.704, 28.715),
+  Sandra = c(36.086, 30.313, 30.537, 30.887, 29.256, 32.151, 39.572, 31.692, NA, NA, NA, NA, NA, NA, NA, NA),
+  Tania = c(29.391, 29.084, 28.683, 29.153, 28.854, 29.328, 29.405, 29.511, 28.817, 28.76, 28.921, 29.168, NA, NA, NA, NA),
+  Dani = c(53.48, 53.237, 54.34, 49.845, 59.316, 61.362, 48.871, NA, NA, NA, NA, NA, NA, NA, NA, NA)),
+  #Tiempo_medio = c(47.111, 34.948, 34.843, 33.513, 36.072, 37.441, 36.429, 22.209, 14.273, 13.554, 14.46, 14.419, 6.576, 7.244, 6.926, 7.179)
+)
+```
+
+
+
+```{r}
+ggplot(data_LUAD_n12, aes(x = Cores)) +
+  geom_line(aes(y = Claudia, color = "Claudia")) +
+  geom_line(aes(y = Sandra, color = "Sandra")) +
+  geom_line(aes(y = Tania, color = "Tania")) +
+  geom_line(aes(y = Dani, color = "Daniel")) +
+  #geom_line(aes(y = Tiempo_medio, color = "Tiempo medio")) +
+  labs(
+    x = "Number of cores in evam()",
+    y = "Time",
+    title = "LUAD_n2.csv data"
+  ) +
+  theme_minimal() +
+  theme(legend.title = element_blank())
+
+```
+
