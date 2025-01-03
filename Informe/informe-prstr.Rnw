@@ -21,6 +21,7 @@ opts_knit$set(stop_on_error = 2L)
 @
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \maketitle
 
 \tableofcontents
@@ -43,13 +44,13 @@ Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de
 %Las suponisciones del modelo son acumulación irreversibles, independiencia de las muestras y homogeinicidad de los datos. 
 Además, el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. 
 
-No obstante, los MHN se han modificado recientemente para corregir el sesgo por observación \cite{Schill2024}. En este nuevo enfoque, el acto de observar un acontecimiento se considera parte del proceso que se está modelando, lo que implica que el momento de una observación depende de los eventos que hayan tenido ocurrido previamente. Por ejemplo, una acumulación más agresiva de acontecimientos relacionados con el cáncer podría conducir a una detección más temprana. Es importante corregir por este sesgo porque la variable "observación del tumor" actúa como un "colisionador", es decir, una variable influenciada por dos factores (en este caso, tanto las mutacionees genéticas como las circunstancias externas favorecen la observación del tumor). Ignorar este aspecto puede generar sesgos, como predecir que ciertas mutaciones suprimen otras cuando en realidad no lo hacen, además de ocultar relaciones causales reales. Para abordar este problema, se emplean fórmulas tensoriales avanzadas que permiten calcular la función de verosimilitud del modelo \cite{OvercomingObservationBias}.
+No obstante, los MHN se han modificado recientemente para corregir el sesgo por observación \cite{Schill2024}. En este nuevo enfoque, el acto de observar un acontecimiento se considera parte del proceso que se está modelando, lo que implica que el momento de una observación depende de los eventos que hayan ocurrido previamente. Por ejemplo, una acumulación más agresiva de eventos relacionados con el cáncer podría conducir a una detección más temprana. Es importante corregir por este sesgo porque la variable "observación del tumor" actúa como un "colisionador"; es decir, una variable influenciada por dos factores (en este caso, tanto las mutaciones genéticas como las circunstancias externas favorecen la observación del tumor). Ignorar este aspecto puede generar sesgos, como predecir que ciertas mutaciones suprimen otras cuando en realidad no lo hacen, además de ocultar relaciones causales reales. Para abordar este problema, se emplean fórmulas tensoriales avanzadas que permiten calcular la función de verosimilitud del modelo \cite{OvercomingObservationBias}.
 
 En este contexto, se distingue entre un modelo clásico (cMHN) y un modelo corregido para este sesgo (observation-aware MHN; oMHN). El modelo clásico asume que todos los tumores comienzan en un estado no mutado, que los eventos ocurren de forma irreversible y de uno en uno y que el tiempo de observación del tumor es aleatorio y desconocido. Este modelo se basa en cadenas de Markov en tiempo continuo, donde el tumor "salta" entre estados ((0,0) $\rightarrow$ (1,0), etc.) con ciertas probabilidades por unidad de tiempo, definidas mediante tasas de transición modeladas en una matriz $Q$. Esta matriz se construye utilizando los parámetros $\Theta$, que representan las tasas base ($\Theta_{ii}$) y las interacciones entre eventos (($\Theta_{ij}$)). A partir de esta matriz, también se pueden calcular la probabilidades de los estados del tumor en el momento de observación, suponiendo una distribución exponencial fija del tiempo. Sin embargo, este modelo clásico no considera el impacto del sesgo por observación.
 
 La matriz $\Theta$ captura la relación de interdependencia entre nodos (representando eventos), donde los riesgos de ciertos nodos afectan directamente a los riesgos de otros \cite{ModellingCancerProgression}. Así, la matriz describe las interdependencias y las intensidades de estas interacciones entre los eventos. Cada elemento $\Theta_{ij}$ representa el impacto directo del evento $j$ sobre el evento $i$ en términos del riesgo o probabilidad de un evento perjudicial. La diagonal representa los riesgos sin considerar interdependencias.
 
-El nuevo modelo oMHN incorpora explícitamente el evento de observación en la red causal como un evento adicional. Este evento se introduce como un nodo adicional ($n+1$) y su tasa base se fija en 1 para estandarizar la escala temporal. Además, se introduce un parametro adicional que permite modelar cómo los eventos genéticos afectan la probabilidad de observar el tumor. En este modelo, una vez que ocurre el evento de observación, todos lo eventos genéticos restantes "se congelan" (sus tasas de multiplican por 0), reflejando que no se observan más eventos genéticos después de la detección. A diferencia del modelo cMHN, el modelo oMHN divide los estados en dos subconjuntos: antes y después de la observación. La matriz $Q$ se amplía para combinar los parámetros $\Theta$ y $\Omega$, donde $\Omega$ captura cómo los eventos genéticos influyen en la tasa de observación. Sin embargo, la introducción de este nuevo parámetro genera un problema de la no identificabilidad, que se aborda mediante una regularización simétrica controlada por el hiperparámetro $\lambda$ \cite{Schill2024}.
+El nuevo modelo oMHN incorpora explícitamente el evento de observación en la red causal como un evento adicional. Este evento se introduce como un nodo adicional ($n+1$) y su tasa base se fija en 1 para estandarizar la escala temporal. Además, se introduce un parametro adicional que permite modelar cómo los eventos genéticos afectan la probabilidad de observar el tumor. En este modelo, una vez que ocurre el evento de observación, todos lo eventos genéticos restantes "se congelan" (sus tasas se multiplican por 0), reflejando que no se observan más eventos genéticos después de la detección. A diferencia del modelo cMHN, el modelo oMHN divide los estados en dos subconjuntos: antes y después de la observación. La matriz $Q$ se amplía para combinar los parámetros $\Theta$ y $\Omega$, donde $\Omega$ captura cómo los eventos genéticos influyen en la tasa de observación. Sin embargo, la introducción de este nuevo parámetro genera un problema de la no identificabilidad, que se aborda mediante una regularización simétrica controlada por el hiperparámetro $\lambda$ \cite{Schill2024}.
 
 %Limitación de MHN --> no puede trbaajr con interacción de más de tres??
 %Algunas de las preguntas que el modelo MHN intenta resultar son: ¿En qué orden suelen ocurrir las mutaciones?¿Qué tan rápido ocurren?¿Cómo influyen las mutaciones entre sí?¿Cómo afecta todo esto al momento en que observamos el tumor?
@@ -64,7 +65,7 @@ Estos modelos trabajan con datos transversales, es decir, diferentes sujetos son
 \subsubsection{Python: MHN}
 El módulo \code{mhn} de Python cuenta con las funciones originales de MHN. Cuenta con implementación en CUDA, la GPU de Nvidia, para poder acelerar el cálculo de la puntuación de la log-verosimilitud y su gradiente tanto para el espacio de estados completo como para el restringido.
 
-El módulo de Python cuenta con los dos frameworks comentados anteriormente, el clásico y el corregido. Los autores recomiendan en la mayoría de los escenarios utilizar el modelo con el sesgo corregido, ya que aumenta la interpretabilidad de los parámetros inferidos, aunque el modelado de los datos no se vea afectado. El primer paso es escoger la función de optimizado, siendo \code{cMHNOptimizer()} el del modelo MHN clásico y \code{oMHNOptimizer()} el del modelo corregido.
+El módulo de Python cuenta con los dos frameworks comentados anteriormente, el clásico y el corregido. Los autores recomiendan en la mayoría de los escenarios utilizar el modelo con el sesgo corregido (oMHN), ya que aumenta la interpretabilidad de los parámetros inferidos, aunque el modelado de los datos no se vea afectado. El primer paso es escoger la función de optimizado, siendo \code{cMHNOptimizer()} el del modelo MHN clásico y \code{oMHNOptimizer()} el del modelo corregido.
 
 Se requiere que los datos de input estén en formato de matriz binaria, la cual se puede importar con el módulo \code{pandas} y la función \code{load\_data\_matrix()} o, en caso de que esté en un fichero csv, directamente con \code{load\_data\_from\_csv()}.
 
@@ -116,7 +117,16 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete. Es utilizada internamente por runShiny.
 \end{itemize}
 
-%Comparar funcionalidades de web y R (además de con python)
+\subsubsection{Comparativa entre las funcionalidades de evamtools y su página web}
+Tanto EvamTools como su página web nos permiten calcular un modelo cMHN a partir de un fichero que contenga los datos en forma de matriz binaria, y en el caso de la web también nos permite introducir los genotipos de los pacientes a mano. El cálculo del modelo se realiza con la función evam del paquete y nos permite especificar los parámetros: número de núcleos y lambda; esta última también la podemos especificar en la página web. El output de ambos es similar: se obtiene la matriz log-$\Theta$, los ratios de transición, las probabilidades de transición,... así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve Shiny nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en R. Además, hay veces que los datos de las figuras se solapan unos con otros impidiendo la correcta visualización y comprensión de los resultados por lo que es casi una obligación su importación a R. %INCOMPLETO:
+
+\subsubsection{Comparativa entre las funcionalidades de evamtools y python}
+Respecto al paquete mhn de Python y EvamTools de R, mientras que este último sólo permite calcular el modelo cMHN, Python puede calcular tanto el cMHN como el oMHN aplicando la correción del sesgo.
+A la hora de calcular el modelo, python contiene la función lambda_from_cv() que nos permite calcular la lambda óptima para nuestro conjunto de datos indicando las lambdas máxima y mínima, el número de pasos y el número de folds. Sin embargo, hemos observado que para datasets pequeños hay veces que el cálculo de la lambda da error (Zero Divission Error). En el caso de EvamTools, no hay ninguna función en el paquete que nos permita realizar este cálculo.
+Tras el cálculo del modelo Python sólo devuelve la matriz log-$\Theta$, mientras que R además devuelve la matriz log-$\Theta$ exponencial, los ratios de transición, las probabilidades de transición,...
+Una vez calculado el modelo, a partir de él se pueden generar datos sintéticos empleando la función sample_artificial_data() de python al igual que se puede hacer con sample_evam() de R.
+Al calcular el modelo en R con evam podemos especificar el parámetro paths_max=True, nos devuelve las probabilidades que tienen cada uno de esos paths. En python, podemos calcular las probabilidad de que una mutación haya precedido a otra sabiendo que ambas se encuentran en el presente mutadas mediante la función sample_trajectories(); y también nos permite predecir el siguiente evento teniendo en cuenta un genotipo particular con la función compute_next_events_probs(). Estas dos últimas funcionalidades no las presenta R.
+%Más ejemplos de cosas que hace R
 
 \subsection{Velocidad}
 Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando de igual manera y sin cambios aparentes en el tiempo de ejecución. La función \code{evam} permite especificar el número de núcleos a utilizar para la computación del modelo. Tras medir el tiempo de ejecución del modelo con tres datasets de distintos tamaños (81, 500 y 3662 observaciones con 6, 12 y 12 genes respectivamente), se puede ver una ligera tendencia de que, a mayor número de núcleos, el tiempo de computación va descendiendo. No obstante, al alcanzar una cierta cantidad de núcleos, que es diferente para distintos ordenadores, el tiempo de ejecución deja de mostrar la tendencia descrita. 
@@ -159,9 +169,227 @@ En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al có
 En Python, se nombra cMHN como el modelo clásico de MHN, el cual es el implementado en \code{evamtools}. Por ello, hemos querido comparar los resultados de ambas formas, utilizando el mismo dataset en Python y en R. Los resultados han mostrado la misma tendencia en ambas opciones (relación positiva o negativa entre los genes), aunque los valores concretos varían. Al comparar los dos códigos, la diferencia radica en el cálculo de un lambda óptimo ajustado a los datos en el caso de Python, mientras que \code{evamtools} permite especificar un lambda y, en caso contrario, utiliza el ajuste genérico de $1/n$. Al añadir manualmente el valor de lambda calculado por \code{mhn} en \code{evam}, los resultados de la matriz en ambos paquetes sí son idénticos. 
 
 <<eval=FALSE>>=
-##CÓDIGO DE DANI
+##CÓDIGO UTILIZADO
+
+# Cargar el paquete 'reticulate'
+library("reticulate")
+
+# Configurar reticulate para usar Python 3 y verificar su configuración:
+use_python("/usr/bin/python3", required = TRUE)
+py_config()
+
+###
+
+# Importar librerías a usar numpy y matplotlib
+mhn <- import("mhn")
+np <- import("numpy")
+plt <- import("matplotlib.pyplot")
+random <- import("random")
+
+# Usar reticulate para obtener el atributo __version__ del paquete mhn e imprimirla
+mhn_version <- py_get_attr(mhn, "__version__")
+print(mhn_version)
+
+###
+
+# Cargar el archivo CSV en un dataframe con 500 observaciones, en R
+data <- read.csv('LUAD_500.csv')
+
+# Correr el código de python con la función "py_run_string"
+py_run_string("
+import random
+import pandas as pd
+
+input = pd.read_csv('LUAD_500.csv')
+print (input.head())
+
+print('Number of observations:', len(input)) 
+print('Number of events:', len(input.columns))
+
+print('Event frequencies:')
+input.sum(axis=0) / len(input)
+
+print('istribution of active event counts across observations:')
+input.sum(axis=1).value_counts().sort_index()
+
+# En este caso no es necesario coger una muestra de 500 observaciones, por lo que:
+input_subset = input
+
+# Generar resultados
+result = input_subset.sum(axis=1).value_counts().sort_index()
+print (result)
+")
+
+# Convertir el dataframe de R a un dataframe de pandas en Python
+py$data <- r_to_py(data)  
+
+# Verificar cómo está estructurado el DataFrame en Python
+py_run_string("
+print(result)
+")
+
+# Acceder a los resultados de Python en R
+input_subset_python <- py$input_subset
+
+# Convertir la Serie de pandas a una lista en Python
+py_run_string("
+result_list = result.tolist()  # Convertir la Serie a lista
+")
+# Acceder a la lista desde R
+result_list <- py$result_list
+print(result_list)
 
 
+# Ejecutar las funciones de Python usando reticulate
+py_run_string("from mhn.optimizers import cMHNOptimizer")
+py_run_string("cMHN_opt = cMHNOptimizer()")
+
+# Cargar los datos en los optimizadores
+py_run_string("cMHN_opt.load_data_matrix(input_subset)")
+
+# Establecer las penalizaciones para cMHN
+py_run_string("cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
+
+# Verificar si se cargaron correctamente los datos y la configuración
+py_run_string("print(cMHN_opt)")
+
+###
+
+py_run_string("
+import random
+import pandas as pd
+from mhn.optimizers import cMHNOptimizer
+
+# Convertir el dataframe a un objeto manejable en Python
+input = data
+
+# Estadísticas básicas del conjunto de datos
+print('Number of observations:', len(input))  # Número de individuos
+print('Number of events:', len(input.columns))  # Número de eventos
+
+print('Event frequencies:')
+print(input.sum(axis=0) / len(input))  # Frecuencias de eventos
+
+print('Distribution of active event counts across observations:')
+print(input.sum(axis=1).value_counts().sort_index())  # Distribución
+
+result = input_subset.sum(axis=1).value_counts().sort_index()
+
+# Inicializar el optimizador
+cMHN_opt = cMHNOptimizer()
+
+# Cargar los datos en el optimizador
+cMHN_opt.load_data_matrix(input)
+
+# Establecer las penalizaciones para cMHN
+cMHN_opt.set_penalty(cMHNOptimizer.Penalty.L1)
+
+# Verificar la configuración del optimizador
+print(cMHN_opt)
+")
+
+# Para acceder a 'result' desde R
+result <- py$result
+print(result)
+
+######
+
+# Calcular el lambda óptimo que usa python
+py_run_string('
+lambda_min= 0.1 / len(input_subset)
+lambda_max = 100 / len(input_subset)
+
+print("Minimum lambda:", lambda_min)
+print("Maximum lambda:", lambda_max)
+
+n_cv_steps = 5
+
+import numpy as np
+
+lambda_sequence = np.exp(np.linspace(
+    np.log(lambda_min + 1e-10), np.log(lambda_max + 1e-10), n_cv_steps))
+
+print("Lambda sequence:")
+lambda_sequence
+
+n_cv_folds = 3
+
+cMHN_opt.set_device(cMHNOptimizer.Device.CPU)
+
+cMHN_lambda = cMHN_opt.lambda_from_cv(
+    lambda_min=lambda_min, lambda_max=lambda_max, steps=n_cv_steps, nfolds=n_cv_folds,
+    show_progressbar=True)
+
+import matplotlib.pyplot as plt
+
+# plot original lambda sequence
+plt.scatter(lambda_sequence, np.full(len(lambda_sequence), 1), color="black")
+
+# plot cross-validated lambdas
+plt.scatter(cMHN_lambda, 2, color="red")
+
+# labels
+plt.text(cMHN_lambda, 1.9, "cMHN", ha="center")
+
+# log scale
+plt.xscale("log")
+plt.yticks([])
+plt.ylabel("")
+plt.show()
+')
+
+# Obtener las secuencias de lambda desde Python a R
+lambda_sequence <- py$lambda_sequence
+cMHN_lambda <- py$cMHN_lambda
+
+#####
+
+# Obtener el resultado de cMHN utilizando la lambda previa
+py_run_string("
+# train cMHN
+cMHN_opt.train(lam=cMHN_lambda)
+# save output
+cMHN_opt.result.save(filename='cMHN.csv')
+
+import json
+import pprint
+
+with open('cMHN_meta.json') as f:
+    cMHN_log = json.load(f)
+
+pprint.pprint(cMHN_log)
+")
+
+######
+
+# Obtener el gráfico cMHN
+py_run_string("import matplotlib.pyplot as plt")
+
+py_run_string("cMHN_opt.result.plot()")
+
+# Mostrar el gráfico generado
+py_run_string("plt.show()")
+
+# O mostrar la matriz generada
+py_run_string("print(cMHN_opt.result)")
+
+
+###
+#####
+#######
+## Ahora los resultados obtenidos con la función evam
+
+library("evamtools")
+
+datos <- evam(data, methods = "MHN")
+datos$MHN_theta      # Se corresponde con cMHN_opt.result en Python
+# No da exactamente los mismos resultados
+# CUIDADO. El orden de las filas y las columnas no coincide en Python y R.
+
+# Sin embargo, al repetir evam utilizando la lambda de Python...
+datos2 <- evam(data, methods = "MHN", mhn_opts = list(lambda = cMHN_lambda))
+datos2$MHN_theta
+# ... sí que coinciden los resultados.
 
 
 @
