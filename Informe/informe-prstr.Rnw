@@ -211,7 +211,7 @@ print (result)
 ")
 
 # Convertir el dataframe de R a un dataframe de pandas en Python
-py$data <- r_to_py(data)  # Convertir el dataframe de R a Python
+py$data <- r_to_py(data)  
 
 # Verificar cómo está estructurado el DataFrame en Python
 py_run_string("
@@ -372,14 +372,14 @@ py_run_string("print(cMHN_opt.result)")
 library("evamtools")
 
 datos <- evam(data, methods = "MHN")
-datos$MHN_theta      # Es la tabla cMHN
+datos$MHN_theta      # Se corresponde con cMHN_opt.result en Python
 # No da exactamente los mismos resultados
-# CUIDADO. El orden de las filas y las columnas no coincide en python y R.
+# CUIDADO. El orden de las filas y las columnas no coincide en Python y R.
 
-# Sin embargo, al repetir evam utilizando la lambda de python
+# Sin embargo, al repetir evam utilizando la lambda de Python...
 datos2 <- evam(data, methods = "MHN", mhn_opts = list(lambda = cMHN_lambda))
 datos2$MHN_theta
-# Sí que coinciden los resultados.
+# ... sí que coinciden los resultados.
 
 
 @
