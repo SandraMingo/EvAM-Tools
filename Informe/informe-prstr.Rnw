@@ -21,7 +21,6 @@ opts_knit$set(stop_on_error = 2L)
 @
 
 \begin{document}
-\SweaveOpts{concordance=TRUE}
 \maketitle
 
 \tableofcontents
@@ -117,19 +116,24 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete. Es utilizada internamente por runShiny.
 \end{itemize}
 
-\subsubsection{Comparativa entre las funcionalidades de evamtools y su página web}
-Tanto EvamTools como su página web nos permiten calcular un modelo cMHN a partir de un fichero que contenga los datos en forma de matriz binaria, y en el caso de la web también nos permite introducir los genotipos de los pacientes a mano. El cálculo del modelo se realiza con la función evam del paquete y nos permite especificar los parámetros: número de núcleos y lambda; esta última también la podemos especificar en la página web. El output de ambos es similar: se obtiene la matriz log-$\Theta$, los ratios de transición, las probabilidades de transición,... así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve Shiny nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en R. Además, hay veces que los datos de las figuras se solapan unos con otros impidiendo la correcta visualización y comprensión de los resultados por lo que es casi una obligación su importación a R. %INCOMPLETO:
+\subsubsection{Comparativa entre las funcionalidades de \code{evamtools} y su página web}
+Tanto EvamTools como su página web permiten calcular un modelo cMHN a partir de un fichero que contenga los datos en forma de matriz binaria, y en el caso de la web también permite introducir los genotipos de los pacientes a mano. %No solo pacientes, ¿no? muestras con acumulación de eventos en general
+El cálculo del modelo se realiza con la función evam del paquete y nos permite especificar los parámetros: número de núcleos y lambda; esta última también la podemos especificar en la página web. El output de ambos es similar: se obtiene la matriz log-$\Theta$, los ratios de transición, las probabilidades de transición,... así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve Shiny nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en R. Además, hay veces que los datos de las figuras se solapan unos con otros impidiendo la correcta visualización y comprensión de los resultados por lo que es casi una obligación su importación a R. %INCOMPLETO:
 
-\subsubsection{Comparativa entre las funcionalidades de evamtools y python}
-Respecto al paquete mhn de Python y EvamTools de R, mientras que este último sólo permite calcular el modelo cMHN, Python puede calcular tanto el cMHN como el oMHN aplicando la correción del sesgo.
-A la hora de calcular el modelo, python contiene la función lambda_from_cv() que nos permite calcular la lambda óptima para nuestro conjunto de datos indicando las lambdas máxima y mínima, el número de pasos y el número de folds. Sin embargo, hemos observado que para datasets pequeños hay veces que el cálculo de la lambda da error (Zero Divission Error). En el caso de EvamTools, no hay ninguna función en el paquete que nos permita realizar este cálculo.
-Tras el cálculo del modelo Python sólo devuelve la matriz log-$\Theta$, mientras que R además devuelve la matriz log-$\Theta$ exponencial, los ratios de transición, las probabilidades de transición,...
-Una vez calculado el modelo, a partir de él se pueden generar datos sintéticos empleando la función sample_artificial_data() de python al igual que se puede hacer con sample_evam() de R.
-Al calcular el modelo en R con evam podemos especificar el parámetro paths_max=True, nos devuelve las probabilidades que tienen cada uno de esos paths. En python, podemos calcular las probabilidad de que una mutación haya precedido a otra sabiendo que ambas se encuentran en el presente mutadas mediante la función sample_trajectories(); y también nos permite predecir el siguiente evento teniendo en cuenta un genotipo particular con la función compute_next_events_probs(). Estas dos últimas funcionalidades no las presenta R.
+\subsubsection{Comparativa entre las funcionalidades de \code{evamtools} y \code{mhn}}
+Respecto al paquete \code{mhn} de Python y \code{evamtools} de R, mientras que este último sólo permite calcular el modelo cMHN, en Python se puede calcular tanto el cMHN como el oMHN aplicando la correción del sesgo.
+A la hora de calcular el modelo, \code{mhn} en Python contiene la función \code{lambda\_from\_cv()} que nos permite calcular la lambda óptima para nuestro conjunto de datos indicando las lambdas máxima y mínima, el número de pasos y el número de folds. Sin embargo, hemos observado que para datasets pequeños hay veces que el cálculo de la lambda da error (Zero Divission Error). En el caso de \code{evamtools}, no hay ninguna función en el paquete que nos permita realizar este cálculo.
+Tras el cálculo del modelo, Python sólo devuelve la matriz log-$\Theta$, mientras que R además devuelve la matriz log-$\Theta$ exponencial, los ratios de transición, las probabilidades de transición,...
+Una vez calculado el modelo, a partir de él se pueden generar datos sintéticos empleando la función \code{sample\_artificial\_data()} de Python al igual que se puede hacer con \code{sample\_evam()} de R.
+Al calcular el modelo en R con \code{evam} podemos especificar el parámetro \code{paths\_max=TRUE}, el cual nos devuelve las probabilidades que tienen cada uno de esos paths. En Python, podemos calcular las probabilidad de que una mutación haya precedido a otra sabiendo que ambas se encuentran en el presente mutadas mediante la función \code{sample\_trajectories()}; y también nos permite predecir el siguiente evento teniendo en cuenta un genotipo particular con la función \code{compute\_next\_events\_probs()}. Estas dos últimas funcionalidades no las presenta R.
 %Más ejemplos de cosas que hace R
 
 \subsection{Velocidad}
 Dentro del paquete de evamtools en R, los datos se pueden manejar como data frame y como matriz, funcionando de igual manera y sin cambios aparentes en el tiempo de ejecución. La función \code{evam} permite especificar el número de núcleos a utilizar para la computación del modelo. Tras medir el tiempo de ejecución del modelo con tres datasets de distintos tamaños (81, 500 y 3662 observaciones con 6, 12 y 12 genes respectivamente), se puede ver una ligera tendencia de que, a mayor número de núcleos, el tiempo de computación va descendiendo. No obstante, al alcanzar una cierta cantidad de núcleos, que es diferente para distintos ordenadores, el tiempo de ejecución deja de mostrar la tendencia descrita. 
+
+El módulo de Python \code{mhn} cuenta con una implementación con CUDA, aumentando la velocidad de cálculo. No obstante, por las características de nuestros ordenadores, no hemos podido comprobar esa reducción del tiempo de computación, trabajando solo con la versión estándar. En dicha versión, son fundamentalmente dos pasos los que tienen un mayor tiempo de computación: la búsqueda del lambda óptimo y el entrenamiento del modelo. La búsqueda del lambda óptimo es el paso más lento, siendo para el modelo cMHN varios segundos más rápido que para oMHN. Esto también se notó en el entrenamiento del modelo, pero con una diferencia menor de un par de decisegundos a un segundo. 
+
+Respecto a la web app, es la herramienta más lenta de las tres examinadas. Un dataset con unas 80 observaciones en 6 genes tarda entre 5 y 15 segundos para calcular solo el modelo MHN, dejando el resto de parámetros por defecto. Con datasets de 500 observaciones, ese tiempo supera los 3 minutos, pudiendo tardar en ocasiones más de media hora en mostrar por pantalla la matriz de resultado.
 
 %Diseña experimentos sencillos:
 %Usa datasets de tamaño pequeño, mediano y grande.
@@ -390,8 +394,6 @@ datos$MHN_theta      # Se corresponde con cMHN_opt.result en Python
 datos2 <- evam(data, methods = "MHN", mhn_opts = list(lambda = cMHN_lambda))
 datos2$MHN_theta
 # ... sí que coinciden los resultados.
-
-
 @
 
 \subsection{Modificar evamtools para incluir la corrección del sesgo}
