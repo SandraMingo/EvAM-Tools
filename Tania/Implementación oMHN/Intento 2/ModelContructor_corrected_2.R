@@ -65,12 +65,26 @@ Build.Q.Extended <- function(Theta, Omega){
 }
 
 # Get the diagonal of Q. 
-Q.Diag <- function(Theta){
+# Q.Diag <- function(Theta){
+#  n <- ncol(Theta)
+#  dg <- rep(0, 2^n)
+# 
+# for(i in 1:n){
+#    dg <- dg - Q.Subdiag(Theta, i)
+#  }
+#  
+#  return(dg)
+#}
+
+#Modificada: 
+
+Q.Diag <- function(Theta, Omega = rep(1, ncol(Theta))){
   n <- ncol(Theta)
   dg <- rep(0, 2^n)
   
   for(i in 1:n){
-    dg <- dg - Q.Subdiag(Theta, i)
+    # Incorporar Omega al calcular la subdiagonal
+    dg <- dg - Q.Subdiag(Theta, i) * exp(log(Omega[i])) # Aplica el sesgo de Omega
   }
   
   return(dg)
