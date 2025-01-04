@@ -1,0 +1,277 @@
+---
+title: "Correción_sesgo_R"
+output: html_document
+date: "2025-01-03"
+---
+
+Para implementar la corrección por sesgo en el código de R usando el modelo oMHN, tenemos que ajustar las funciones que construyen las matrices de tasas de transición y las distribuciones de probabilidad.
+
+1- Agregar el evento de observación a la matriz de transición:
+
+En el código de Build.Q y Q.Subdiag, hay que modificar las transiciones para que el evento de observación esté incluido. Esto implica construir la nueva matriz de transición extendida que ahora tiene un bloque adicional (el evento de observación).
+
+```{r}
+Build.Q <- function(Theta, Omega, num_diagonals = 3) {
+  n <- nrow(Theta)
+  num_states <- 2^n
+  
+  # Calculamos el rango de k basado en num_diagonals
+  k_range <- -floor(num_diagonals/2):floor(num_diagonals/2)
+  
+  # Inicializamos las diagonales
+  diagonals <- vector("list", length(k_range))
+  for(i in seq_along(k_range)) {
+    diagonals[[i]] <- rep(0, num_states)
+  }
+  
+  # Llenamos las diagonales con los valores de Subdiags
+  for(i in 1:n) {
+    subdiag <- Q.Subdiag(Theta, i)
+    for(j in seq_along(k_range)) {
+      k <- k_range[j]
+      if(k < 0) {
+        diagonals[[j]] <- diagonals[[j]] + c(rep(0, 2^(i-1)), subdiag[1:(num_states-2^(i-1))])
+      } else if(k > 0) {
+        diagonals[[j]] <- diagonals[[j]] + c(subdiag[(2^(i-1)+1):num_states], rep(0, 2^(i-1)))
+      } else {
+        diagonals[[j]] <- diagonals[[j]] + subdiag[1:num_states]
+      }
+    }
+  }
+  
+  # Usamos Matrix::bandSparse para construir la matriz de transición
+  Q <- Matrix::bandSparse(num_states, k = k_range, diagonals = diagonals)
+  
+  # El resto del código permanece igual...
+  U <- Matrix::Diagonal(n = num_states, x = c(rep(1, n), Omega))
+  T <- Q - U
+  Q_extended <- Matrix::bdiag(T, U)
+  diag(Q_extended) <- -colSums(Q_extended)
+  
+  return(Q_extended)
+}
+
+```
+
+
+2- Cálculo de las Probabilidades de Estado Posteriores a la Observación:
+ Modificación de la función Learn.Indep para incorporar Ω
+
+```{r}
+Learn.Indep <- function(pD, Omega) {
+  n <- log(length(pD), base=2)  # Número de eventos
+  Theta <- matrix(0, nrow=n, ncol=n)  # Inicializa Theta
+  
+  for(i in 1:n) {
+    pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)    
+    perc <- sum(pD[, 2])  # Proporción de los eventos observados
+    
+    # Ajustamos Theta con el sesgo de observación
+    Theta[i, i] <- log(perc / (1 - perc)) + log(Omega[i])  # Ajuste con Omega
+  }
+  
+  return(round(Theta, 2))  # Retorna la matriz Theta ajustada
+}
+
+```
+
+
+```{r}
+# Función para crear una subdiagonal a partir de Theta
+Q.Subdiag <- function(Theta, i){
+  row <- Theta[i,]
+  n <- length(row)
+  
+  # Empieza la subdiagonal con la tasa base de Theta_ii
+  s <- exp(row[i])
+  
+  # Duplica para cada factor Theta_ij, exceptuando cuando i = j
+  for(j in 1:n){
+    s <- c(s, s * exp(row[j]) * (i != j))  # Evita duplicar para j == i
+  }
+  
+  return(s)
+}
+```
+
+
+
+```{r}
+#Create a random MHN with (log-transformed) parameters Theta.
+#Sparsity is given as percentage.
+Random.Theta <- function(n, sparsity=0){
+  Theta  <- matrix(0,nrow=n,ncol=n)
+  
+  diag(Theta)  <- NA
+  nonZeros <- sample(which(!is.na(Theta)), size=(n^2 - n)*(1 - sparsity))
+  
+  Theta[nonZeros] <- rnorm(length(nonZeros))
+  diag(Theta) <- rnorm(n)
+  
+  return(round(Theta,2))
+} 
+```
+## Faltaria el de Q.diag, pero creo que esta metido en build.Q
+
+# Comorbar que va bien
+
+
+```{r}
+# Generamos un modelo con 4 eventos (n=4) y un 30% de esparsidad
+n <- 4
+Theta <- Random.Theta(n, sparsity=0.3)
+print("Matriz Theta (parámetros de transición):")
+print(Theta)
+```
+
+
+```{r}
+# Efecto multiplicativo de la observación (Omega)
+Omega <- rep(2, n)  # Asumimos un efecto multiplicativo de 2 para cada evento de progresión
+
+# Construimos la matriz Q extendida
+Q_extended <- Build.Q(Theta, Omega)
+print("Matriz de transición extendida (Q):")
+print(Q_extended)
+```
+
+
+
+```{r}
+#Ejemplo de uso
+Omega <- rep(2, 4)
+Theta <- matrix(runif(16, min = -1, max = 1), nrow = 4)
+Q_extended <- Build.Q(Theta, Omega, num_diagonals = 3)
+print("Matriz de transición extendida (Q) corregida:")
+print(Q_extended)
+```
+
+
+```{r}
+# Verifica las dimensiones de la matriz Q_extended
+dim(Q_extended)
+
+# Verifica los primeros 10 elementos de la matriz para ver la estructura
+head(Q_extended, 10)
+
+# Comprueba si la estructura es correcta: 
+# la diagonal de Q debe contener valores negativos, 
+# mientras que los elementos fuera de la diagonal deberían reflejar las tasas de transición.
+sum(diag(Q_extended))  # Los elementos diagonales deberían sumar 0 si todo está bien
+
+```
+
+
+```{r}
+# Construye la matriz Q sin corrección de sesgo (sin Omega)
+Omega_no_effect <- rep(1, 4)  # Sin efecto multiplicativo (Omega = 1)
+Q_no_effect <- Build.Q(Theta, Omega_no_effect)
+
+# Comparar la matriz sin corrección del sesgo con la matriz con corrección
+print("Matriz Q sin corrección:")
+print(Q_no_effect)
+
+print("Matriz Q con corrección:")
+print(Q_extended)
+
+# Verifica si la corrección realmente tiene un efecto:
+# Compara la diferencia de las tasas de transición en las posiciones relevantes
+diff <- Q_extended - Q_no_effect
+print("Diferencia entre matrices Q extendidas:")
+print(diff)
+
+```
+
+## En este me sale un error
+
+```{r}
+install.packages("expm")
+library(expm)
+
+# Supongamos que tienes la distribución inicial p(0) como (1, 0, ..., 0) (solo el primer estado es ocupado)
+p_0 <- rep(0, length(Q_extended))
+p_0[1] <- 1  # Empieza en el primer estado
+
+# Resolvemos la ecuación de Kolmogorov: p_A(t) = exp(t*T) * p(0)
+# Como exp(t*T) converge a 0 a medida que t se hace grande, podemos usar una aproximación con un tiempo largo (t)
+t_large <- 1000
+p_A_infty <- expm::expm(t_large * Matrix::Matrix(Q_extended[1:nrow(Q_extended), 1:nrow(Q_extended)])) %*% p_0
+
+# La distribución estacionaria p_B(∞) se puede obtener mediante la matriz U:
+p_B_infty <- solve(Matrix::Matrix(Q_extended)) %*% p_0
+
+# Compara la distribución estacionaria esperada con la obtenida
+print("Distribución estacionaria p_B(∞) calculada:")
+print(p_B_infty)
+
+```
+
+
+
+
+```{r}
+Theta <- Random.Theta(3)  # 3 eventos principales + 1 observación
+Q <- Build.Q(Theta, Omega)
+
+# Validar que las filas sumen a 0
+all.equal(rowSums(as.matrix(Q)), rep(0, nrow(Q)))  # Debe ser TRUE
+
+# Inspeccionar las tasas del evento de observación
+Q[nrow(Q), ]  # Verificar la última fila (evento de observación)
+```
+
+
+```{r}
+# Testeamos la función Build.Q con Omega y Theta aleatorio
+n <- 3  # Número de eventos
+Omega <- c(1.2, 0.8, 1.1)  # Efectos de la observación
+Theta <- Random.Theta(n)  # Genera una matriz aleatoria de Theta
+
+# Generamos la matriz de transición extendida
+Q_extended <- Build.Q(Theta, Omega)
+
+# Imprimimos la dimensión de la matriz Q_extended
+print(dim(Q_extended))  # Verificamos que la dimensión sea 2^(n+1)
+
+# Imprimimos la matriz Q_extended
+print(Q_extended)
+
+
+# Verificamos las transiciones de la matriz Q_extended
+# Q_extended debe tener un bloque de transiciones para el evento de observación
+print(Q_extended)
+
+# Comprobamos las tasas de transición para las filas/columnas correspondientes al estado de observación
+# Aseguramos que las transiciones se ajustan con Omega
+# Las primeras filas/columnas deberían estar afectadas por Omega de acuerdo con la observación
+for(i in 1:n) {
+  print(paste("Tasa de transición para el evento", i, "ajustada por Omega:", Omega[i]))
+  print(Q_extended[i, n+1])  # Verificamos las transiciones hacia el estado de observación
+}
+
+```
+
+
+
+```{r}
+
+# Definimos la distribución inicial
+p_0 <- rep(0, 2^(n+1))
+p_0[1] <- 1  # Suponemos que el sistema comienza en el primer estado
+
+# Calculamos la evolución de la distribución de estados a largo plazo
+t_large <- 100  # Tiempo grande para alcanzar la distribución estacionaria
+
+# Extraemos la submatriz Q de las primeras n filas/columnas (excluyendo el estado de observación)
+Q_submatrix <- Q_extended[1:nrow(Q_extended), 1:nrow(Q_extended)]
+
+# Calculamos la matriz exponencial de la submatriz
+library(expm)
+p_A_infty <- expm::expm(t_large * Matrix::Matrix(Q_submatrix)) %*% p_0
+
+# Verificamos el estado estacionario a largo plazo
+print(p_A_infty)
+
+```
+
+
