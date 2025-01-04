@@ -334,6 +334,14 @@ p_A_infty <- expm::expm(t_large * Matrix::Matrix(Q_submatrix)) %*% p_0
 # Verificamos el estado estacionario a largo plazo
 print(p_A_infty)
 
+####
+## Y para ver las distribuciones estacionarias podemos usar:
+p_with_bias <- Stationary.Distribution(Theta, Omega, p0)
+
+# Mostrar las distribuciones estacionarias
+cat("\nDistribución estacionaria sin corrección de sesgo (Omega = 1):\n")
+print(p_no_bias)
+
 ```
 
 
