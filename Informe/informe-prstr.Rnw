@@ -88,11 +88,16 @@ El último paso es entrenar el modelo final con el lambda óptimo obtenido de la
 \subsubsection{Web app: evamtools}
 La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, permitiendo estudiar acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
 
-La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero o metiendo manualmente las frecuencias del genotipo. También se permite generar datos transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. 
+Una de las funciones principales de la pagina web es la inferencia de CPMs a partir de los datos subidos por el usuarios. Estos datos pueden ser cargados, modificados (si el usuario lo desea) o introducidos de forma manual y son los que se usarán para inferir los modelos CPMs. Además, es posible crear modelos CPM como grafos acíclicos dirigidos (DAGs) con tasas/probailidades especificas, o modelos de redes de Markov (MHN). Este último permite modelar las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. A partir de modelos generados, se puede construir datos sintéticos para explorar cómo diferentes métodos de CPM producen inferencia.
+
+La página web permite, además, la modificación de alguna funciones avanzadas, permitiendo explorar  como un parámetro puede afectar a los resultados. 
+
+%%La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero pudiendo estos datos ser modificados o metiendo manualmente las frecuencias de los genotipos. También es posible generar datos sintéticos para posteriormente poder explorar cómo diferentes moodelos de CPM producen inferencias. 
+%% ESTA PARTE NO LA ENTIENDO: transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. 
 
 Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respectivo histograma. Bajo opciones avanzadas se pueden seleccionar los distintos CPMs a utilizar y personalizar algunos de los parámetros. Los resultados se pueden visualizar en forma de los grafos acíclicos dirigidos o la matriz de MHN, además de la tabla de predicción de los modelos ajustados. Estos resultados se pueden descargar en formato RDS, tratándose de un objeto de R, al cual se puede importar.
 
-%Diferencias entre las funcionalidades de la app y el código Python.
+%Diferencias entre las funcionalidades de la app y el código Python y R.
 %Facilidad de uso y visualización.
 
 \subsubsection{R: evamtools}
@@ -116,9 +121,13 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete. Es utilizada internamente por runShiny.
 \end{itemize}
 
+%% Mtería algun ejemplo del uso de las funciones (como lo que tengo en la demo de R)
+
 \subsubsection{Comparativa entre las funcionalidades de \code{evamtools} y su página web}
-Tanto EvamTools como su página web permiten calcular un modelo cMHN a partir de un fichero que contenga los datos en forma de matriz binaria, y en el caso de la web también permite introducir los genotipos de los pacientes a mano. %No solo pacientes, ¿no? muestras con acumulación de eventos en general
-El cálculo del modelo se realiza con la función evam del paquete y nos permite especificar los parámetros: número de núcleos y lambda; esta última también la podemos especificar en la página web. El output de ambos es similar: se obtiene la matriz log-$\Theta$, los ratios de transición, las probabilidades de transición,... así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve Shiny nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en R. Además, hay veces que los datos de las figuras se solapan unos con otros impidiendo la correcta visualización y comprensión de los resultados por lo que es casi una obligación su importación a R. %INCOMPLETO:
+Tanto el paquete \code{evamtools} como su página web permiten calcular un modelo MHN sin correción de sesgo a partir de la carga de un fichero que contenga los datos con estructura binaria. La página web también permite introducir la frecuencia de los genotipos de forma manual y, los datos cargados pueden ser modificados. %No solo pacientes, ¿no? muestras con acumulación de eventos en general
+El cálculo del modelo se realiza con la función \code{evam} del paquete en la que se pueden expecificar parámetros como el número de núcleos (core) y el hiperparámetro $\lambda$. El primero de ellos (core) no puede ser seleccionado desde la web. No obstante el segundo ($\lambda$) si. El output de ambos es similar: se obtiene la matriz log-$\Theta$, los ratios de transición, las probabilidades de transición,... así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve Shiny nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en R. Además, hay veces que los datos de las figuras se solapan unos con otros impidiendo la correcta visualización y comprensión de los resultados por lo que es casi una obligación su importación a R. %INCOMPLETO:
+
+
 
 \subsubsection{Comparativa entre las funcionalidades de \code{evamtools} y \code{mhn}}
 Respecto al paquete \code{mhn} de Python y \code{evamtools} de R, mientras que este último sólo permite calcular el modelo cMHN, en Python se puede calcular tanto el cMHN como el oMHN aplicando la correción del sesgo.
