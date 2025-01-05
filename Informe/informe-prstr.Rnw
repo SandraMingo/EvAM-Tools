@@ -98,7 +98,7 @@ El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos dato
 
 El paquete cuenta con 10 funciones exportadas:
 \begin{itemize}
-\item \code{evam}: Esta es la función principal para ajustar un modelo EvAM a un conjunto de datos proporcionados por el usuario (datos trasnversales). Genera un objeto que contiene la estructura del modelo ajustado, parámetros estimados y restricciones inferidas.
+\item \code{evam}: Esta es la función principal para ajustar un modelo EvAM a un conjunto de datos proporcionados por el usuario (datos transversales). Genera un objeto que contiene la estructura del modelo ajustado, parámetros estimados y restricciones inferidas.
 \item \code{every\_which\_way\_data}: Proporciona un conjunto de datos de prueba predefinido (22 datasets de datos de cáncer de los artículos \cite{DiazUriarte2019} y \cite{DiazColunga2021}.). Pueden ser usados como ejemplo o para validaciones.
 \item \code{ex\_mixed\_and\_or\_xor}: Es un conjunto de datos de ejemplo que incluye combinaciones de relaciones AND, OR y XOR entre eventos.
 \item \code{examples\_csd}: Es un conjunto de datos de ejemplo diseñado para ilustrar modelos de datos seccionales cruzados (cross-sectional data). Estos pueden ser usados para probar las funcionalidades del paquete, sin la necesidad de preparar datos propios.
