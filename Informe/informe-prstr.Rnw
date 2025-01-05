@@ -86,7 +86,7 @@ El último paso es entrenar el modelo final con el lambda óptimo obtenido de la
 
 
 \subsubsection{Web app: evamtools}
-La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, permitiendo estudiar acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
+La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, facilitando estudiar la acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
 
 Una de las funciones principales de la pagina web es la inferencia de CPMs a partir de los datos subidos por el usuarios. Estos datos pueden ser cargados, modificados (si el usuario lo desea) o introducidos de forma manual y son los que se usarán para inferir los modelos CPMs. Además, es posible crear modelos CPM como grafos acíclicos dirigidos (DAGs) con tasas/probailidades especificas, o modelos de redes de Markov (MHN). Este último permite modelar las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. A partir de modelos generados, se puede construir datos sintéticos para explorar cómo diferentes métodos de CPM producen inferencia.
 
