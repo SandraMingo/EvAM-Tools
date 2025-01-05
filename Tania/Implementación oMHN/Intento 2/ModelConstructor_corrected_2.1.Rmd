@@ -24,7 +24,7 @@ Build.Q <- function(Theta){
   # Usamos Matrix::bandSparse para construir la matriz de transición
   # Y llenamos las diagonales con los valores de Subdiags.
   Q <- Matrix::bandSparse(2^n, k = -2^(0 : (n-1)), diagonals=Subdiags)
-  diag(Q) <- -colSums(Q)
+  diag(Q) <- -colSums(array(Q, dim = c(n^2, n^2)))
   
   return(Q)
 }
@@ -47,7 +47,6 @@ Build.Q.Extended <- function(Theta, Omega){
   
   return(Q_bar)
 }
-
 
 ```
 
@@ -187,6 +186,12 @@ print(Theta$Omega)
 ```{r}
 # Efecto multiplicativo de la observación (Omega)
 Omega <- rep(2, n)  # Asumimos un efecto multiplicativo de 2 para cada evento de progresión
+
+#### Prueba:
+Theta <- matrix(runif(n^2, min=-1, max=1), nrow=n, ncol=n)
+
+# Generamos Omega, que será un vector con valores entre 1 y 2 (ya que Omega > 0)
+Omega <- runif(n, min=1, max=2)
 
 # Construimos la matriz Q extendida
 Q_extended <- Build.Q.Extended(Theta, Omega)
