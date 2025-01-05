@@ -190,8 +190,6 @@ Omega <- rep(2, n)  # Asumimos un efecto multiplicativo de 2 para cada evento de
 #### Prueba:
 Theta <- matrix(runif(n^2, min=-1, max=1), nrow=n, ncol=n)
 
-# Generamos Omega, que será un vector con valores entre 1 y 2 (ya que Omega > 0)
-Omega <- runif(n, min=1, max=2)
 
 # Construimos la matriz Q extendida
 Q_extended <- Build.Q.Extended(Theta, Omega)
