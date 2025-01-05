@@ -1,0 +1,409 @@
+---
+title: "EvamTools"
+output: html_document
+date: "2025-01-05"
+---
+
+```{r}
+# Instalar librerías si no están instaladas
+# install.packages("ggplot2")
+# install.packages("reshape2")
+
+# Cargar librerías
+library(ggplot2)
+library(reshape2)
+library(evamtools)
+```
+
+
+## 1. Cargar datos
+
+Los datos deben tener unas características concretas. 
+
+El formato debe ser CSV, con sujetos en filas y genes en columnas. Usa 0 o 1 para alterado/no alterado (mutado/no mutado). La primera fila debe contener los nombres de los genes y no debe haber columnas con nombres de sujetos. 
+
+Un archivo de ejemplo está disponible aquí:
+
+[Example file](https://raw.githubusercontent.com/rdiaz02/EvAM-Tools/main/examples_for_upload/tinydata.csv)
+
+Ejemplos adicionales se pueden encontrar en este directorio:
+
+[Additional examples](https://github.com/rdiaz02/EvAM-Tools/tree/main/examples_for_upload)
+
+### Cargar datos de un CSV:
+```{r}
+data <- read.csv("tinydata.csv")
+```
+
+# Introducir frecuencias de genotipos manualmente:
+
+```{r}
+# Lista de genotipos y sus datos
+genotypes <- c('Z', 'a', 'D', 'c')
+data_manual <- matrix(c(
+  0, 0, 1, 1,
+  1, 1, 0, 0,
+  1, 1, 1, 1,
+  0, 0, 0, 0,
+  1, 0, 0, 0,
+  0, 1, 0, 0,
+  0, 1, 0, 0
+), nrow = 7, byrow = TRUE)
+
+#Convertir a dataframe
+data_manual <- as.data.frame(data_manual)
+colnames(data_manual) <- genotypes 
+
+```
+
+### Gráficos de mutaciones:
+```{r}
+# Contar la cantidad de mutaciones en cada columna de data
+mutations_count <- colSums(data)
+
+# Crear el histograma (gráfico de barras)
+barplot(mutations_count, 
+        main = "Number of mutations per gene",
+        xlab = "Gen", 
+        ylab = "Number of mutations",
+        col = "pink")
+
+
+# Contar la cantidad de mutaciones en cada columna de data_manual
+mutations_count <- colSums(data_manual)
+
+# Crear el histograma (gráfico de barras)
+barplot(mutations_count, 
+        main = "Number of mutations per gene",
+        xlab = "Gen", 
+        ylab = "Number of mutations",
+        col = "skyblue")
+
+```
+
+
+### Gráfico de combinaciones de genotipos:
+
+```{r}
+# Inicializar un vector para las combinaciones
+combinations <- list()
+
+genotypes <- colnames(data)
+
+# Recorrer las filas de datos
+for (i in 1:nrow(data)) {
+  # Crear la combinación de genotipos presentes
+  combination <- genotypes[which(data[i, ] == 1)]
+  if (length(combination) == 0) {
+    combination <- "WT"  # Para el caso donde no hay genotipos presentes
+  } else {
+    combination <- paste(sort(combination), collapse = ', ')  # Ordenar y unir
+  }
+  combinations[[i]] <- combination
+}
+
+# Contar las ocurrencias de cada combinación
+counts <- table(unlist(combinations))
+
+# Crear un data frame con index, genotype y counts
+result <- data.frame(
+  Index = 1:length(counts),
+  Genotype = names(counts),
+  Counts = as.integer(counts)
+)
+
+# Dibujar el histograma en color naranja
+barplot(counts, 
+        col = "orange",  
+        main = "Genotype's counts", 
+        xlab = "Genotypes combinations", 
+        ylab = "Frecuency",  
+        las = 2,  
+        border = "black", 
+        ylim = c(0, max(counts) + 1)) 
+```
+
+
+## 2. Ajuste del modelo
+
+```{r}
+# Ejecutar el modelo MHN
+results_mhn <- evam(data,                   # Datos de entrada
+  methods = c("MHN"),                       # Usamos el modelo MHN
+  mhn_opts = list(lambda =1/nrow(data)),    #Ajustable
+  cores = 2)
+
+# Exploración de los resultados de modelo MHN generado a partir de nuestros datos:
+summary(results_mhn)
+
+#Inspeccion de matriz theta:
+matriz_theta <- results_mhn$MHN_theta
+matriz_theta_exp <- results_mhn$MHN_exp_theta
+
+print (matriz_theta)
+print (matriz_theta_exp)
+```
+Los valores positivos en la matriz log-Θ indican relaciones promotoras, donde un evento genético aumenta la probabilidad de otro.
+
+Los valores negativos, por otro lado, indican relaciones inhibidoras, donde un evento genético disminuye la probabilidad de otro.
+
+## 3. Visualización resultados
+
+### HeatMap para matriz theta:
+
+```{r}
+matriz_theta <- results_mhn$MHN_theta
+
+# Convertir las matrices en formato largo para ggplot2
+df_theta_long <- melt(matriz_theta)
+colnames(df_theta_long) <- c("State1", "State2", "Theta")
+
+df_theta_exp_long <- melt(matriz_theta_exp)
+colnames(df_theta_exp_long) <- c("State1", "State2", "Exp_Theta")
+
+# Crear HeapMap para 'matriz_theta'
+ggplot(df_theta_long, aes(x = State1, y = State2, fill = Theta)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Theta") + 
+  labs(title = "HeatMap of Theta Matrix",
+       x = "States (From)",
+       y = "States (To)") + 
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),  
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(Theta, 2)), color = "black", size = 3)  
+```
+
+
+### HeatMap para matriz de tasas de transición (sin ggplot2):
+
+```{r}
+# Crear la matriz de tasa de transición
+transition_rate_dgCmatrix <- results_mhn$MHN_trans_rate_mat
+transition_rate_matrix <- as.matrix(transition_rate_dgCmatrix)
+
+# Crear el mapa de calor
+heatmap(transition_rate_matrix,
+        Rowv = NA, Colv = NA,
+        col = heat.colors(256),  # Usar una paleta de colores
+        scale = "none",          
+        main = "HeatMap of Rate Transition Matrix",  
+        cexCol = 1, cexRow = 1,  
+        margins = c(10, 10)) 
+```
+### HeatMap para matriz de tasas de transición (con ggplot2):
+
+```{r}
+transition_rate_dgCmatrix <- results_mhn$MHN_trans_rate_mat
+transition_rate_matrix <- as.matrix(transition_rate_dgCmatrix)
+
+# Convertir la matriz en un formato largo para ggplot2
+df_long <- melt(transition_rate_matrix)
+colnames(df_long) <- c("State1", "State2", "TransitionRate")
+
+# Crear el mapa de calor con colores personalizados
+ggplot(df_long, aes(x = State1, y = State2, fill = TransitionRate)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Transition Rate") +  
+  labs(title = "HeatMap of Rate Transition Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(TransitionRate, 2)), color = "black", size = 3)  
+
+```
+### HeatMap para matriz de transición (con ggplot2):
+
+```{r}
+transition_dgCmatrix <- results_mhn$MHN_trans_mat
+transition_matrix <- as.matrix(transition_dgCmatrix)
+
+# Convertir la matriz en un formato largo para ggplot2
+df_long <- melt(transition_matrix)
+colnames(df_long) <- c("State1", "State2", "TransitionMatrix")
+
+# Crear el mapa de calor con colores personalizados
+ggplot(df_long, aes(x = State1, y = State2, fill = TransitionMatrix)) +
+  geom_tile() +
+  scale_fill_gradient2(low = "red", mid = "white", high = "green", midpoint = 0, 
+                       name = "Transition Matrix") +  
+  labs(title = "HeatMap of Transition Matrix",
+       x = "States (From)",
+       y = "States (To)") +  
+  theme_minimal() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),  
+        axis.text.y = element_text(angle = 0, hjust = 1),    
+        plot.title = element_text(hjust = 0.5)) +  
+  geom_text(aes(label = round(TransitionMatrix, 2)), color = "black", size = 3)
+```
+### Predicción de frecuencias de genotipos
+
+Convertimos los datos obtenidos en un formato adecuado para su representación gráfica.
+
+```{r}
+# Extraer las frecuencias de genotipos predichas
+MHN_predicted_genotype_freqs <- results_mhn$MHN_predicted_genotype_freqs
+
+# Convertir a data frame
+MHN_predicted_genotype_freqs_df <- as.data.frame(MHN_predicted_genotype_freqs)
+MHN_predicted_genotype_freqs_df$genotype <- rownames(MHN_predicted_genotype_freqs_df)
+
+# Visualización mediante un gráfico de barras
+barplot(MHN_predicted_genotype_freqs_df$MHN_predicted_genotype_freqs,
+        names.arg = MHN_predicted_genotype_freqs_df$genotype, 
+        col = "orange",            
+        main = "Predicted Genotype Frequencies", 
+        ylab = "Frequencies", 
+        las = 2)
+```
+
+
+### Tasas de Transición:
+A continuación, se visualizan las tasas de transición utilizando la función plot_evam.
+
+```{r}
+# Generar gráfico de tasas de transición
+plot_evam(
+   results_mhn, 
+   plot_type = "trans_rate_mat", 
+   top_paths = 5)
+
+# #Para guardar la imagen, descomente las siguientes líneas:
+# png("trans_rate_matrix.png", width = 800, height = 600)
+# plot_evam(results_mhn, plot_type = "trans_rate_mat", top_paths = 5)
+# dev.off()
+```
+### Probabilidades de Transición
+El siguiente gráfico muestra las probabilidades de transición entre genotipos utilizando la función plot_evam.
+
+```{r}
+# Generar gráfico de probabilidades de transición
+plot_evam(
+   results_mhn, 
+   plot_type = "trans_mat", 
+   top_paths = 5)
+
+# Para guardar la imagen, descomente las siguientes líneas:
+# png("trans_matrix.png", width = 800, height = 600)
+# plot_evam(results_mhn, plot_type = "trans_mat", top_paths = 5)
+# dev.off()
+
+```
+
+```{r}
+
+```
+
+
+### Generación de Muestras Aleatorias
+Generamos datos simulados a partir del modelo entrenado para explorar las transiciones de genotipos observados.
+
+```{r}
+# Generar muestras aleatorias con la función sample_evam
+out_samp_mhn <- sample_evam(results_mhn, 
+                            N = 10000,
+                            methods = "MHN",
+                            output = c("sampled_genotype_counts", 
+                                       "obs_genotype_transitions", "state_counts"),
+                            genotype_freqs_as_data = TRUE)
+```
+
+### Exploración de los datos simulados
+Se exploran los datos simulados y se comparan con los resultados observados.
+
+```{r}
+# Histograma de combinaciones de genotipos simulados
+barplot(out_samp_mhn$MHN_state_counts$Counts,
+        names.arg = out_samp_mhn$MHN_state_counts$Genotype, 
+        col = "orange",  
+        main = "Simulated Genotype Counts", 
+        xlab = "Genotype Combinations", 
+        ylab = "Frequency",  
+        las = 2,  
+        border = "black", 
+        ylim = c(0, max(out_samp_mhn$MHN_state_counts$Counts) + 1))
+
+# Comparación de matrices de transición observadas y predichas
+out_samp_mhn$MHN_obs_genotype_transitions
+results_mhn$MHN_trans_mat
+
+# Comparación de frecuencias de genotipos simulados y predichos
+out_samp_mhn$MHN_sampled_genotype_counts
+results_mhn$MHN_predicted_genotype_freqs
+```
+
+### Visualización de transiciones de genotipos observados
+Finalmente, visualizamos las transiciones observadas con etiquetas descriptivas.
+
+```{r}
+# Gráfico de transiciones observadas
+plot_evam(
+   results_mhn,
+   out_samp_mhn,
+   plot_type = "obs_genotype_transitions")
+
+# Para guardar la imagen, descomente las siguientes líneas:
+# png("obs_genotype_transitions.png", width = 800, height = 600)
+# plot_evam(results_mhn, out_samp_mhn, plot_type = "obs_genotype_transitions")
+# dev.off()
+
+# Mostrar solo nuevas mutaciones en cada transición
+plot_evam(
+   results_mhn,
+   out_samp_mhn,
+   plot_type = "obs_genotype_transitions", 
+   label_type = "acquisition", 
+   top_paths = 3)
+```
+### Generación de un modelo customizado:
+Para generar un modelo customizado, se utiliza la función random_evam especificando los nombres de los genes y el tipo de modelo que se desea aplicar. En este caso, se seleccionan los genes "A", "B", "C" y "D" y se utiliza el modelo MHN.
+
+```{r}
+#Generar el # Generar el modelo con los genes seleccionados y el modelo MHN
+results_mhn_random <- random_evam(gene_names = c("A", "B", "C", "D"),
+                                  model = "MHN")
+
+# Inspeccionar los resultados generados
+summary(results_mhn_random)
+```
+## 4. Datos incluidos en el paquete
+Para trabajar con los datos de ejemplo incluidos en el paquete, primero se deben cargar y revisar su estructura. A continuación, se presenta el proceso para cargar los datos y acceder a la matriz correspondiente al modelo MHN, si es necesario:
+
+```{r}
+# Cargar los datos de ejemplo proporcionados en el paquete
+data(examples_csd)
+
+# Ver la estructura de los datos cargados
+str(examples_csd)
+
+# Acceder a los datos de la matriz MHN, en caso de que se desee trabajar con MHN
+mhn_matrix <- examples_csd$matrix
+
+# Mostrar los datos de la matriz MHN
+print(mhn_matrix)
+```
+
+
+```{r}
+# Cargar los datos del paquete
+data(every_which_way_data)
+
+# Seleccionar un subconjunto específico de datos (primeros 40 registros de las columnas 2 a 6)
+Dat1 <- every_which_way_data[[16]][1:40, 2:6]
+
+print (Dat1)
+```
+
+## 5. Llamar a la pagina web desde R:
+Desde la aplicación web, se podrán subir datos y ajustar modelos sin escribir código, modificar parámetros del modelo de manera interactiva asi como generar y visualizar resultados en tiempo real.
+
+```{r}
+runShiny(host="0.0.0.0", port=3000, test.mode = FALSE)
+```
+
