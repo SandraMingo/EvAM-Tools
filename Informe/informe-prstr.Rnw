@@ -240,7 +240,6 @@ datos <- evam(data, methods = "MHN")
 datos$MHN_theta         # Se corresponde con cMHN_opt.result en Python
                         # No da exactamente los mismos resultados y el orden de las filas 
                         # y las columnas no coincide en Python y R.
-plot_evam(datos, plot_type = "trans_mat", methods = "MHN", top_paths = 5)
 @
 
 \item Finalmente, repetimos este último paso utilizando el lambda calculada en Python.
