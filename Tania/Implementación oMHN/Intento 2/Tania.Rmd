@@ -304,32 +304,61 @@ for(i in 1:n) {
 
 
 ```{r}
+p0 <- rep(1, 2^n) / 2^n  # Distribución inicial uniforme
 
-# Definimos la distribución inicial
-p_0 <- rep(0, 2^(n+1))
-p_0[1] <- 1  # Suponemos que el sistema comienza en el primer estado
-
-# Calculamos la evolución de la distribución de estados a largo plazo
-t_large <- 100  # Tiempo grande para alcanzar la distribución estacionaria
-
-# Extraemos la submatriz Q de las primeras n filas/columnas (excluyendo el estado de observación)
-Q_submatrix <- Q_extended[1:nrow(Q_extended), 1:nrow(Q_extended)]
-
-# Calculamos la matriz exponencial de la submatriz
-library(expm)
-p_A_infty <- expm::expm(t_large * Matrix::Matrix(Q_submatrix)) %*% p_0
-
-# Verificamos el estado estacionario a largo plazo
-print(p_A_infty)
-
-####
 ## Y para ver las distribuciones estacionarias podemos usar:
 p_with_bias <- Stationary.Distribution(Theta, Omega, p0)
+p_no_bias <- Stationary.Distribution(Theta, Omega=1, p0)
 
 # Mostrar las distribuciones estacionarias
+cat("\nDistribución estacionaria con corrección de sesgo:\n")
+print(p_with_bias)
+
 cat("\nDistribución estacionaria sin corrección de sesgo (Omega = 1):\n")
 print(p_no_bias)
+```
 
+
+```{r}
+# Create sample Theta and Omega
+Theta <- matrix(c(-0.5, 0.3,
+                   0.2, -0.7), nrow=2, byrow=TRUE)
+Omega <- c(1.2, 1.5)
+
+# Generate initial distribution p0
+p0 <- c(0.4, 0.3, 0.2, 0.1)
+
+# Calculate stationary distribution
+result <- Stationary.Distribution(Theta, Omega, p0)
+
+# Print results
+cat("Theta matrix:\n")
+print(Theta)
+cat("\nOmega vector:\n")
+print(Omega)
+cat("\nInitial distribution p0:\n")
+print(p0)
+cat("\nStationary distribution:\n")
+print(result)
+```
+
+
+
+
+
+```{r}
+# Generate initial distribution p0
+p0 <- c(0.4, 0.3, 0.2, 0.1)
+
+# Calculate stationary distribution
+result <- Stationary.Distribution(Theta, Omega, p0)
+
+# Print results
+cat("Theta matrix:\n")
+print(Theta)
+cat("\nOmega vector:\n")
+print(Omega)
+cat("\nInitial distribution p0:\n")
 ```
 
 
