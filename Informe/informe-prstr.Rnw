@@ -49,7 +49,7 @@ En este contexto, se distingue entre un modelo clásico (cMHN) y un modelo corre
 
 La matriz $\Theta$ captura la relación de interdependencia entre nodos (representando eventos), donde los riesgos de ciertos nodos afectan directamente a los riesgos de otros \cite{ModellingCancerProgression}. Así, la matriz describe las interdependencias y las intensidades de estas interacciones entre los eventos. Cada elemento $\Theta_{ij}$ representa el impacto directo del evento $j$ sobre el evento $i$ en términos del riesgo o probabilidad de un evento perjudicial. La diagonal representa los riesgos sin considerar interdependencias.
 
-El nuevo modelo oMHN incorpora explícitamente el evento de observación en la red causal como un evento adicional. Este evento se introduce como un nodo adicional ($n+1$) y su tasa base se fija en 1 para estandarizar la escala temporal. Además, se introduce un parametro adicional que permite modelar cómo los eventos genéticos afectan la probabilidad de observar el tumor. En este modelo, una vez que ocurre el evento de observación, todos lo eventos genéticos restantes "se congelan" (sus tasas se multiplican por 0), reflejando que no se observan más eventos genéticos después de la detección. A diferencia del modelo cMHN, el modelo oMHN divide los estados en dos subconjuntos: antes y después de la observación. La matriz $Q$ se amplía para combinar los parámetros $\Theta$ y $\Omega$, donde $\Omega$ captura cómo los eventos genéticos influyen en la tasa de observación. Sin embargo, la introducción de este nuevo parámetro genera un problema de la no identificabilidad, que se aborda mediante una regularización simétrica controlada por el hiperparámetro $\lambda$ \cite{Schill2024}.
+El nuevo modelo oMHN incorpora explícitamente el evento de observación en la red causal como un evento adicional. Este evento se introduce como un nodo adicional ($n+1$) y su tasa base se fija en 1 para estandarizar la escala temporal. Además, se introduce un parametro adicional que permite modelar cómo los eventos genéticos afectan la probabilidad de observar el tumor. En este modelo, una vez que ocurre el evento de observación, todos lo eventos genéticos restantes "se congelan" (sus tasas se multiplican por 0), reflejando que no se observan más eventos genéticos después de la detección. A diferencia del modelo cMHN, el modelo oMHN divide los estados en dos subconjuntos: antes y después de la observación. La matriz $Q$ se amplía para combinar los parámetros $\Theta$ y $\Omega$, donde $\Omega$ captura cómo los eventos genéticos influyen en la tasa de observación. Sin embargo, la introducción de este nuevo parámetro genera un problema de la no identificabilidad, que se aborda mediante una regularización simétrica controlada por el hiperparámetro $\lambda$ (lambda) \cite{Schill2024}.
 
 %Limitación de MHN --> no puede trbaajr con interacción de más de tres??
 %Algunas de las preguntas que el modelo MHN intenta resultar son: ¿En qué orden suelen ocurrir las mutaciones?¿Qué tan rápido ocurren?¿Cómo influyen las mutaciones entre sí?¿Cómo afecta todo esto al momento en que observamos el tumor?
@@ -88,17 +88,10 @@ El último paso es entrenar el modelo final con el lambda óptimo obtenido de la
 \subsubsection{Web app: evamtools}
 La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, facilitando estudiar la acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
 
-Una de las funciones principales de la pagina web es la inferencia de CPMs a partir de los datos subidos por el usuarios. Estos datos pueden ser cargados, modificados (si el usuario lo desea) o introducidos de forma manual y son los que se usarán para inferir los modelos CPMs. Además, es posible crear modelos CPM como grafos acíclicos dirigidos (DAGs) con tasas/probailidades especificas, o modelos de redes de Markov (MHN). Este último permite modelar las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. A partir de modelos generados, se puede construir datos sintéticos para explorar cómo diferentes métodos de CPM producen inferencia.
-
-La página web permite, además, la modificación de alguna funciones avanzadas, permitiendo explorar  como un parámetro puede afectar a los resultados. 
-
-%%La web comienza con el input del usuario, donde se puede introducir los datos subiendo un fichero pudiendo estos datos ser modificados o metiendo manualmente las frecuencias de los genotipos. También es posible generar datos sintéticos para posteriormente poder explorar cómo diferentes moodelos de CPM producen inferencias. 
-%% ESTA PARTE NO LA ENTIENDO: transversales de modelos CPM, diferenciando modelos que utilizan grafos acíclicos dirigidos para especificar restricciones de los MHNs, que modelan las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$Theta$. 
+Una de las funciones principales de la página web es la inferencia de CPMs a partir de los datos de las frecuencias de los genotipos subidos por el usuario. Estos datos pueden ser cargados y modificados (si el usuario lo desea) o introducidos de forma manual y son los que se usarán para inferir los modelos CPMs. Además, es posible crear modelos CPM como grafos acíclicos dirigidos (DAGs) con tasas/probabilidades específicas, o modelos de redes de Markov. Estos últimos permiten modelar las relaciones inhibidoras/facilitadoras entre genes utilizando tasas de riesgo de referencia y efectos multiplicativos entre genes especificados en la matriz de riesgos mutuos log-$\Theta$. A partir de modelos generados, se puede construir datos sintéticos para explorar cómo diferentes métodos de CPM producen inferencia.
+La página web permite, además, la modificación de alguna funciones avanzadas, permitiendo explorar cómo un parámetro puede afectar a los resultados. 
 
 Si se sube un fichero de datos, la web muestra el conteo de genotipos y su respectivo histograma. Bajo opciones avanzadas se pueden seleccionar los distintos CPMs a utilizar y personalizar algunos de los parámetros. Los resultados se pueden visualizar en forma de los grafos acíclicos dirigidos o la matriz de MHN, además de la tabla de predicción de los modelos ajustados. Estos resultados se pueden descargar en formato RDS, tratándose de un objeto de R, al cual se puede importar.
-
-%Diferencias entre las funcionalidades de la app y el código Python y R.
-%Facilidad de uso y visualización.
 
 \subsubsection{R: evamtools}
 El paquete de \code{evamtools} de R permite calcular distintos CPMs de unos datos que se pueden generar (función \code{random\_evam}) o importar desde un csv. Los CPMs que incluye son Conjunctive Bayesian Networks (CBM), Oncogenic Trees (OT), Disjunctive Bayesian Networks (DBN: OncoBN), Hidden Extended Suppes-Bayes Causal Networks (H-ESBCN) y MHN (Mutual Harzards Networks). 
@@ -111,8 +104,8 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{examples\_csd}: Es un conjunto de datos de ejemplo diseñado para ilustrar modelos de datos seccionales cruzados (cross-sectional data). Estos pueden ser usados para probar las funcionalidades del paquete, sin la necesidad de preparar datos propios.
 \item \code{plot\_evam}: Esta función genera representaciones gráficas de modelos ajustados EvAM y sus relaciones, visualizando transiciones entre genotipos en términos de probabilidades o tasas de transición. También permite personalizar el tipo de gráfica y los datos mostrados.
 \item \code{random\_evam}: Esta función genera un modelo aleatorio de un tipo especificado, pudiendo personalizar parámetros como el número de genes, densidad del grafo, pesos, y distribución de errores. Devuelve un objeto con la misma estrutura que la función evam. Esta función puede es útil para simulaciones y pruebas.
-\item \code{runShiny}: Inicia la aplicación web Shiny integrada para explorar modelos de forma interactiva.
-\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función evam) o aleatorio (función random\_evam). Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
+\item \code{runShiny}: Inicia la aplicación web integrada para explorar modelos de forma interactiva. 
+\item \code{sample\_evam}: Esta función genera muestras de genotipos a partir de un modelo EvAM ajustado (función \code{evam}) o aleatorio (función \code{random\_evam}). Permite indicar el número de nuestras a generar y el nivel de errores de genotipado.
 \item \code{evamtools-deprecated}: Sus funciones están en desuso dentro del paquete y serán reemplazadas en próximas actualizaciones. En ellas se encuentran:
     \begin{itemize}
         \item \code{plot\_CPMs}: Crea gráficos ajustados de EvAMs, utilizando los modelos ajustados y gráficos personalizados para las tasas y probabilidades de transición.
@@ -121,65 +114,51 @@ El paquete cuenta con 10 funciones exportadas:
 \item \code{SHINY\_DEFAULTS}: Define configuraciones predeterminadas para la aplicación Shiny del paquete. Es utilizada internamente por runShiny.
 \end{itemize}
 
-%% Mtería algun ejemplo del uso de las funciones (como lo que tengo en la demo de R)
+Algunas de estas funciones se han explorado en un fichero adicional.
 
 \subsubsection{Comparativa entre las funcionalidades de \code{evamtools} y su página web}
-Tanto el paquete \code{evamtools} como su página web permiten calcular un modelo MHN sin correción de sesgo a partir de la carga de un fichero que contenga los datos con estructura binaria. La página web también permite introducir la frecuencia de los genotipos de forma manual y, los datos cargados pueden ser modificados. %No solo pacientes, ¿no? muestras con acumulación de eventos en general
-El cálculo del modelo se realiza con la función \code{evam} del paquete en la que se pueden expecificar parámetros como el número de núcleos (core) y el hiperparámetro $\lambda$. El primero de ellos (core) no puede ser seleccionado desde la web. No obstante el segundo ($\lambda$) si. El output de ambos es similar: se obtiene la matriz log-$\Theta$, los ratios de transición, las probabilidades de transición,... así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve Shiny nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en R. Además, hay veces que los datos de las figuras se solapan unos con otros impidiendo la correcta visualización y comprensión de los resultados por lo que es casi una obligación su importación a R. %INCOMPLETO:
-
-
+Tanto el paquete \code{evamtools} como su página web permiten calcular un modelo MHN sin correción de sesgo a partir de la carga de un fichero que contenga los datos con estructura binaria. La página web también permite introducir la frecuencia de los genotipos de forma manual y, los datos cargados pueden ser modificados. El cálculo del modelo se realiza con la función \code{evam} del paquete en la que se pueden expecificar parámetros como el número de núcleos (core) y el hiperparámetro $\lambda$. El primero de ellos (core) no puede ser seleccionado desde la web. No obstante, el segundo ($\lambda$) sí. El output de ambos es similar: se obtiene, entre otros, la matriz log-$\Theta$, los ratios de transición y las probabilidades de transición, así como las frecuencias relativas de los genotipos predichos. Para poder seguir trabajando con el output que devuelve la web nos debemos descargar el objeto e importarlo en R, de manera que es mucho más cómodo correrlo directamente en un script de R. Además, hay veces que los datos de las figuras se solapan unos con otros, impidiendo la correcta visualización y comprensión de los resultados, por lo que es casi una obligación su importación a R. 
 
 \subsubsection{Comparativa entre las funcionalidades de \code{evamtools} y \code{mhn}}
 Respecto al paquete \code{mhn} de Python y \code{evamtools} de R, mientras que este último sólo permite calcular el modelo cMHN, en Python se puede calcular tanto el cMHN como el oMHN aplicando la correción del sesgo.
-A la hora de calcular el modelo, \code{mhn} en Python contiene la función \code{lambda\_from\_cv()} que nos permite calcular la lambda óptima para nuestro conjunto de datos indicando las lambdas máxima y mínima, el número de pasos y el número de folds. Sin embargo, hemos observado que para datasets pequeños hay veces que el cálculo de la lambda da error (Zero Divission Error). En el caso de \code{evamtools}, no hay ninguna función en el paquete que nos permita realizar este cálculo.
-Tras el cálculo del modelo, Python sólo devuelve la matriz log-$\Theta$, mientras que R además devuelve la matriz log-$\Theta$ exponencial, los ratios de transición, las probabilidades de transición,...
-Una vez calculado el modelo, a partir de él se pueden generar datos sintéticos empleando la función \code{sample\_artificial\_data()} de Python al igual que se puede hacer con \code{sample\_evam()} de R.
-Al calcular el modelo en R con \code{evam} podemos especificar el parámetro \code{paths\_max=TRUE}, el cual  nos devuelve las probabilidades que tienen cada uno de esos paths. En Python, podemos calcular las probabilidad de que una mutación haya precedido a otra sabiendo que ambas se encuentran en el presente mutadas mediante la función \code{sample\_trajectories()}; y también nos permite predecir el siguiente evento teniendo en cuenta un genotipo particular con la función \code{compute\_next\_events\_probs()}. Estas dos últimas funcionalidades no las presenta R.
-%Más ejemplos de cosas que hace R
+A la hora de calcular el modelo, \code{mhn} en Python contiene la función \code{lambda\_from\_cv()} que permite calcular $\lambda$ óptimo para el conjunto de datos indicando los valores de $\lambda$ máximo y mínimo, el número de pasos y el número de folds. Sin embargo, hemos observado que para datasets pequeños hay veces que el cálculo de $\lambda$ da error (Zero Divission Error). En el caso de \code{evamtools}, no hay ninguna función en el paquete que nos permita realizar este cálculo.
+
+Tras el cálculo del modelo, Python sólo devuelve la matriz log-$\Theta$, mientras que R además devuelve, entre otros, la matriz log-$\Theta$ exponencial, los ratios de transición y las probabilidades de transición. 
+Una vez calculado el modelo, a partir de él se pueden generar datos sintéticos empleando la función \code{sample\_artificial\_data()} de Python al igual que se puede hacer con \code{sample\_evam()} de R. No obstante, estas funciones requieren de unos datos previamente cargados. \code{evamtools} cuenta además con una función \code{random\_evam()} que permite crear un modelo customizado sin necesidad de disponer de datos. Esta funcionalidad está ausente en el módulo de Python. Asimismo, \code{evamtools} contiene funcionalidades que aportan los datos para entrenar a los modelos con \code{evam}.
+
+Al calcular el modelo en R con \code{evam} podemos especificar el parámetro \code{paths\_max=TRUE}, el cual nos devuelve las probabilidades que tienen cada uno de esos paths. En Python, podemos calcular las probabilidad de que una mutación haya precedido a otra sabiendo que ambas se encuentran en el presente mutadas mediante la función \code{sample\_trajectories()}; y también nos permite predecir el siguiente evento teniendo en cuenta un genotipo particular con la función \code{compute\_next\_events\_probs()}. Estas dos últimas funcionalidades no las presenta \code{evamtools}. No obstante, \code{mhn} está limitado a los modelos MHN, mientras que \code{evamtools} puede aplicar otros CPMs.
+
+En cuanto a la visualización de los resultados, el módulo \code{mhn} devuelve directamente la matriz log-$\Theta$, mientras que \code{evamtools} cuenta con una función concreta que permite especificar distintos tipos de gráficos que se desea representar (función \code{plot\_evam}).
 
 \subsection{Velocidad}
 Dentro del paquete \code{evamtools} en R, los datos pueden manejarse tanto como data frames como matrices, funcionando de igual manera y sin diferencias significativas en el tiempo de ejecución. La función \code{evam} permite especificar el número de núcleos a utilizar para la computación del modelo. Tras medir el tiempo de ejecución del modelo con tres conjuntos de datos de distintos tamaños (81, 500 y 3662 observaciones con 6, 12 y 12 genes respectivamente), se observa una ligera tendencia: a mayor número de núcleos, el tiempo de computación disminuye. No obstante, al alcanzar una cierta cantidad de núcleos, que varía según el ordenador, el tiempo de ejecución deja de reducirse.
 
-El módulo de Python \code{mhn} cuenta con una implementación que utiliza CUDA para aumentar la velocidad de cálculo. Sin embargo, debido a las características de nuestros ordenadores, no hemos podido comprobar esa reducción en el tiempo de computación, trabajando solo con la versión estándar. En esta versión, dos pasos consumen la mayor parte del tiempo de computación: la búsqueda del lambda óptimo y el entrenamiento del modelo. La búsqueda del lambda óptimo es el paso más lento; en el modelo cMHN, este proceso es varios segundos más rápido que en oMHN. Esta diferencia también se aprecia en el entrenamiento del modelo, aunque es menor, variando entre décimas de segundo y un segundo.
+El módulo de Python \code{mhn} cuenta con una implementación que utiliza CUDA para aumentar la velocidad de cálculo. Sin embargo, debido a las características de nuestros ordenadores, no hemos podido comprobar esa reducción en el tiempo de computación, trabajando solo con la versión estándar. En esta versión, dos pasos consumen la mayor parte del tiempo de computación: la búsqueda del valor óptimo de $\lambda$ y el entrenamiento del modelo. La búsqueda del valor óptimo es el paso más lento; en el modelo cMHN, este proceso es varios segundos más rápido que en oMHN. Esta diferencia también se aprecia en el entrenamiento del modelo, aunque es menor, variando entre décimas de segundo y un segundo.
 
-En cuanto a la aplicación web, es la herramienta más lenta de las tres examinadas. Un conjunto de datos con aproximadamente 80 observaciones y 6 genes tarda entre 5 y 15 segundos en calcular el modelo MHN, utilizando los parámetros predeterminados. Con conjuntos de datos de 500 observaciones, ese tiempo supera los 3 minutos, y en ocasiones puede tardar más de media hora en mostrar en pantalla la matriz de resultados.
-
-%Diseña experimentos sencillos:
-%Usa datasets de tamaño pequeño, mediano y grande.
-%Mide el tiempo de ejecución para las mismas tareas en ambas herramientas.
-% Velocidad con/sin CUDA.
+En cuanto a la aplicación web, es la herramienta más lenta de las tres examinadas. Un conjunto de datos con aproximadamente 80 observaciones y 6 genes tarda entre 5 y 15 segundos en calcular el modelo MHN, utilizando los parámetros predeterminados. Con conjuntos de datos de 500 observaciones, ese tiempo supera los 3 minutos, y en ocasiones puede tardar más de media hora en mostrar por pantalla la matriz de resultados o incluso no llegar a representarla.
 
 \subsection{Ventajas y desventajas}
-En cuanto al módulo de Python, una gran desventaja ha sido el uso de CUDA. Pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, lo que puede suponer una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen y se requiere de mucho tiempo, conocimiento y paciencia para lograrlo. Adicionalmente, el módulo de Python parece tener problemas con ficheros de datos relativamente pequeños debido al cálculo del lambda óptimo que realiza, como ocurre con el documento de \code{BRCA\_ba\_s.csv}.
+En cuanto al módulo de Python, una gran ventaja sería el uso de CUDA, ya que, pese a que no sea necesario para poder utilizar las funcionalidades, sí aumenta la velocidad de cálculo, suponiendo una gran ventaja al trabajar con datasets grandes. No obstante, el módulo solo funciona con CUDA en una versión de Python 3.8.10, limitando así su uso. También pueden dar distintos errores en su instalación, y pese a que los autores tengan un apartado explicando la forma de instalar CUDA para \code{mhn}, no termina de solucionar todos los errores que salen. Otra gran ventaja de \code{mhn} es que actualmente es la única herramienta que tiene implementado el modelo MHN con corrección de sesgo, y cuenta con una demo en el repositorio muy bien explicada. Adicionalmente, el módulo de Python parece tener problemas con ficheros de datos relativamente pequeños debido al cálculo del valor óptimo de $\lambda$ que realiza, como ocurre con el documento de \code{BRCA\_ba\_s.csv}.
 
-Respecto a la web app, es intuitiva de utilizar gracias a su tutorial y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}. Se muestra un aviso cuando el fichero de entrada cuenta con más de 7 genes, limitación que no está presente en el paquete de R. 
+Respecto a la web app, es intuitiva de utilizar gracias a su tutorial y simple en cuanto a sus opciones, pero no es la herramienta apropiada para análisis más exhaustivos y sistemáticos más allá de pequeños experimentos computacionales. El tiempo de ejecución es relativamente alto, por lo que es preferible realizar ese tipo de análisis con un script de R mediante el uso del paquete de \code{evamtools}. Se muestra un aviso cuando el fichero de entrada cuenta con más de 7 genes, limitación que no está presente en el paquete de R. Además, es la única de las herramientas analizadas en este trabajo que requiere de conexión a internet.
 
-Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos y ser utilizable para análisis sistemáticos. Sin embargo, no cuenta con la última versión de MHN corregida por el sesgo del colisionador. 
+Finalmente, el paquete de R es la herramienta más completa de las analizadas en este trabajo al contar con distintos modelos de acumulación de eventos (no solo MHN) y ser utilizable para análisis sistemáticos. Sin embargo, no cuenta con la última versión de MHN corregida por el sesgo del colisionador. Permite acceder a la interfaz web sin la necesidad de tener acceso a internet. Entre sus funcionalidades también incluye muchos parámetros que poder especificar, y cuenta con un output más completo que las otras herramientas al incluir la matriz $\Theta$, la matriz $\Theta$ exponencial, la matriz de transición, la frecuencia de los genotipos predichos, los paths máximos, el orden de los genotipos, $\ldots$. Como se ha mencionado previamente, también permite entrenar a modelos con datos generados aleatoriamente sin tener que cargar datos. En resumen, \code{evamtools} cuenta con más opciones y más parámetros customizables por el usuario, tanto en la computación del modelo como en su representación gráfica.
 
 \section {Exploración de posibles integraciones}
-\subsection{Integración del código en Python en R (Evamtools)}
-
-%Poner algo tipo: debido a que en Pyhton existen ciertas funcionalidades que no existen en evamtools, se podrían implementar estas o llamar a Python desde R....
-
-En muchas ocasiones, es necesario combinar herramientas y librerías de diferentes lenguajes de programación con el objetivo de aprovechar sus fortalezas específicas. La integración entre los lenguajes de Python y R puede ser clave, permitiendo así disponer de las funcionalidades de ambos paquetes (\code{mhn} y \code{evamtools}) para poder desarrollar proyectos más complejos.
+\subsection{Integración del código en Python en R (\code{evamtools})}
+En ocasiones, es necesario combinar herramientas y librerías de diferentes lenguajes de programación con el objetivo de aprovechar sus fortalezas específicas. La integración entre los lenguajes de Python y R puede ser clave, permitiendo así disponer de las funcionalidades de ambos paquetes (\code{mhn} y \code{evamtools}) para poder desarrollar proyectos más complejos.
 
 Con este propósito, el paquete \code{reticulate} de R proporciona una interfaz versátil que permite ejecutar código de Python directamente desde el entorno de R. \code{reticulate} facilita la interoperabilidad entre ambos lenguajes, permitiendo acceder a librerías, funciones y objetos de Python como si fueran nativos en R. Esta capacidad resulta especialmente útil cuando se desean utilizar paquetes especializados de Python, como \code{mhn}, dentro de un flujo de trabajo basado en R. \code{reticulate} es la opción elegida debido a su simplicidad, flexibilidad y su fácil acceso a las numerosas librerías de Python. 
 
-%Existen alternativas como ejecutar scripts de Python desde R mediante llamadas al sistema operativo (e.g., system() o system2()) o a través de API REST que comuniquen ambos lenguajes mediante solicitudes HTTP. 
-
-%También existe un paquete en Python (rpy2) que permite la integración en la dirección inversa, ejecutando código de R desde Python.
-
 En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al código de Python relacionado con el paquete \code{mhn} desde R. Los pasos seguidos fueron:
 \begin{enumerate}
-\item Configuración del entorno: Asegurar que Python esté instalado y accesible desde R mediante la configuración del intérprete Python en \code{reticulate} en la imagen de Docker.
+\item Configuración del entorno en Docker: Asegurar que Python esté instalado y accesible desde R mediante la configuración del intérprete Python en \code{reticulate} en la imagen de Docker.
 \item Instalación del paquete \code{mhn} en Python
 \item Ejecución de código de Python desde R: Llamar a las funciones del paquete \code{mhn} 
 \item Transferencia de datos entre lenguajes: Probar la transferencia de datos y verificar la correcta ejecución de las funciones.
 \end{enumerate}
 
-% EN CASO DE QUE LO HICIÉRAMOS: Adicionalmente, hemos intentado implementar la integración inversa, es decir, llamar código de R desde Python, para explorar las capacidades de herramientas como \code{rpy2}. Esto nos permitió comparar la usabilidad y las limitaciones de ambas aproximaciones, observando que.....
-
-En Python, se nombra cMHN como el modelo clásico de MHN, el cual es el implementado en \code{evamtools}. Por ello, hemos querido comparar los resultados de ambas formas, utilizando el mismo dataset en Python y en R. Los resultados han mostrado la misma tendencia en ambas opciones (relación positiva o negativa entre los genes), aunque los valores concretos varían. Al comparar los dos códigos, la diferencia radica en el cálculo de un lambda óptimo ajustado a los datos en el caso de Python, mientras que \code{evamtools} permite especificar un lambda y, en caso contrario, utiliza el ajuste genérico de $1/n$. Al añadir manualmente el valor de lambda calculado por \code{mhn} en \code{evam}, los resultados de la matriz en ambos paquetes sí son idénticos. 
+En Python, se nombra cMHN como el modelo clásico de MHN, el cual es el implementado en \code{evamtools}. Por ello, hemos querido comparar los resultados de ambas formas, utilizando el mismo dataset en Python y en R. Los resultados han mostrado la misma tendencia en ambas opciones (relación positiva o negativa entre los genes), aunque los valores concretos varían. Al comparar los dos códigos, la diferencia radica en el cálculo de un valor óptimo de $\lambda$ ajustado a los datos en el caso de Python, mientras que \code{evamtools} permite especificarlo y, en caso contrario, utiliza el ajuste genérico de $1/n$. Al añadir manualmente dicho valor calculado por \code{mhn} en \code{evam}, los resultados de la matriz en ambos paquetes sí son idénticos. 
 
 <<eval=FALSE>>=
 library("reticulate")
@@ -188,19 +167,11 @@ library("reticulate")
 use_python("/usr/bin/python3", required = TRUE)
 py_config()
 
-###
-
-# Importar librerías a usar numpy y matplotlib
+# Importar librerías
 mhn <- import("mhn")
 np <- import("numpy")
 plt <- import("matplotlib.pyplot")
 random <- import("random")
-
-# Usar reticulate para obtener el atributo __version__ del paquete mhn e imprimirla
-mhn_version <- py_get_attr(mhn, "__version__")
-print(mhn_version)
-
-###
 
 # Cargar el archivo CSV en un dataframe con 500 observaciones, en R
 data <- read.csv('LUAD_500.csv')
@@ -219,7 +190,7 @@ print('Number of events:', len(input.columns))
 print('Event frequencies:')
 input.sum(axis=0) / len(input)
 
-print('istribution of active event counts across observations:')
+print('Distribution of active event counts across observations:')
 input.sum(axis=1).value_counts().sort_index()
 
 # En este caso no es necesario coger una muestra de 500 observaciones, por lo que:
@@ -230,77 +201,25 @@ result = input_subset.sum(axis=1).value_counts().sort_index()
 print (result)
 ")
 
-# Convertir el dataframe de R a un dataframe de pandas en Python
-py$data <- r_to_py(data)  
-
-# Verificar cómo está estructurado el DataFrame en Python
-py_run_string("
-print(result)
-")
-
 # Acceder a los resultados de Python en R
 input_subset_python <- py$input_subset
+result <- py$result
+print(result)
 
 # Convertir la Serie de pandas a una lista en Python
 py_run_string("
-result_list = result.tolist()  # Convertir la Serie a lista
+result_list = result.tolist()  
 ")
 # Acceder a la lista desde R
 result_list <- py$result_list
 print(result_list)
 
-
-# Ejecutar las funciones de Python usando reticulate
+# Ejecutar las funciones de mhn usando reticulate
 py_run_string("from mhn.optimizers import cMHNOptimizer")
 py_run_string("cMHN_opt = cMHNOptimizer()")
-
-# Cargar los datos en los optimizadores
 py_run_string("cMHN_opt.load_data_matrix(input_subset)")
-
-# Establecer las penalizaciones para cMHN
 py_run_string("cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
-
-# Verificar si se cargaron correctamente los datos y la configuración
 py_run_string("print(cMHN_opt)")
-
-###
-
-py_run_string("
-import random
-import pandas as pd
-from mhn.optimizers import cMHNOptimizer
-
-# Convertir el dataframe a un objeto manejable en Python
-input = data
-
-# Estadísticas básicas del conjunto de datos
-print('Number of observations:', len(input))  # Número de individuos
-print('Number of events:', len(input.columns))  # Número de eventos
-
-print('Event frequencies:')
-print(input.sum(axis=0) / len(input))  # Frecuencias de eventos
-
-print('Distribution of active event counts across observations:')
-print(input.sum(axis=1).value_counts().sort_index())  # Distribución
-
-result = input_subset.sum(axis=1).value_counts().sort_index()
-
-# Inicializar el optimizador
-cMHN_opt = cMHNOptimizer()
-
-# Cargar los datos en el optimizador
-cMHN_opt.load_data_matrix(input)
-
-# Establecer las penalizaciones para cMHN
-cMHN_opt.set_penalty(cMHNOptimizer.Penalty.L1)
-
-# Verificar la configuración del optimizador
-print(cMHN_opt)
-")
-
-# Para acceder a 'result' desde R
-result <- py$result
-print(result)
 
 ######
 
@@ -415,83 +334,146 @@ Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero
 
 Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
 <<>>=
-Random.Theta <- function(n, sparsity=0){
-  Theta  <- matrix(0,nrow=n+1,ncol=n+1) # Agregar una dimensión adicional
-  
-  diag(Theta)  <- NA
-  nonZeros <- sample(which(!is.na(Theta)), size=((n+1)^2 - (n+1))*(1 - sparsity))
-  
-  Theta[nonZeros] <- rnorm(length(nonZeros))
-  diag(Theta) <- rnorm(n+1) # Ajustar la diagonal
-  
-  return(round(Theta,2))
-}
-@
+#Importar librería Matrix:
+library("Matrix")
 
-A continuación se deben incluir las interacciones entre eventos y observación, modificando \code{Q.Subdiag} para tener en cuenta la nueva fila y columna en $\Theta$.
-
-<<>>=
-Q.Subdiag <- function(Theta, i) {
-  row <- Theta[i,]
-  n <- length(row) - 1  # Excluye el evento de observación
-  s <- exp(row[i])  # Base rate Theta_ii
-
-  # Caso especial: si i es el evento de observación
-  if (i == n + 1) {
-    # Define cómo el evento de observación afecta a los demás
-    s_obs <- exp(row[1:n])  # Interacciones con los eventos principales
-    return(c(s, s_obs))
-  }
-
-  # Caso general: eventos no relacionados con la observación
-  for (j in 1:(n + 1)) {
-    if (i != j) {
-      # Multiplica la tasa base por la interacción Theta_ij
-      s <- c(s, s * exp(row[j]))
-    }
-  }
-
-  return(s)
-}
-@
-
-Lo siguiente es actualizar la construcción de Q. Para ello, hay que incorporar a la función \code{Build.Q} las interacciones del evento de observación con el resto de los eventos. 
-
-<<>>=
+# Construye la matriz Q de tasa de transición desde sus subdiagonales.
+# No tiene en cuenta Omega
 Build.Q <- function(Theta) {
-  n <- nrow(Theta) - 1  # Número de eventos sin incluir el de observación
-  Subdiags <- list()
+  n <- nrow(Theta)
   
-  # Construir las subdiagonales incluyendo el evento de observación
-  for (i in 1:(n + 1)) {
-    subdiag <- Q.Subdiag(Theta, i)
-    expected_length <- 2^(n + 1 - i)  # Tamaño esperado de la subdiagonal
-    Subdiags[[i]] <- ifelse(length(subdiag) >= expected_length,
-                            subdiag[1:expected_length],
-                            c(subdiag, rep(0, expected_length - length(subdiag)))
-    )
+  Subdiags <- matrix(0, nrow = 2^n, ncol = n)
+  for (i in 1:n) {
+    Subdiags[, i] <- Q.Subdiag(Theta, i)
   }
   
-  # Crear la matriz de transición esparsa
-  Q <- Matrix::bandSparse(
-    2^(n + 1),               # Tamaño de la matriz (incluye observación)
-    k = -2^(0:n),            # Posiciones de las subdiagonales
-    diagonals = Subdiags     # Subdiagonales calculadas
-  )
-  
-  # Calcular la diagonal principal (tasas de salida)
-  diag(Q) <- 0  # Inicializa la diagonal principal en 0
-  for (i in 1:(2^(n + 1))) {
-    diag(Q)[i] <- -sum(Q[i, -i], na.rm = TRUE)  # Suma negativa de las tasas de salida
-  }
+  Q <- bandSparse(2^n, k = -2^(0:(n-1)), diagonals = Subdiags)
+  diag(Q) <- -rowSums(Q)
   
   return(Q)
 }
 
+# Construimos la matriz Q̄ de tasa de transición extendida.
+# Sí tiene en cuenta Omega.
+Build.Q.Extended <- function(Theta, Omega) {
+  n <- nrow(Theta)
+  Q <- Build.Q(Theta)
+  
+  # Creamos una matriz U que aplica Omega a todos los estados
+  U <- Matrix(0, nrow = 2^n, ncol = 2^n)
+  for (i in 0:(2^n - 1)) {
+    state <- as.integer(intToBits(i)[1:n])
+    omega_product <- prod(Omega[which(state == 1)])
+    U[i + 1, i + 1] <- omega_product
+  }
+  
+  # Creamos una Matriz T
+  T <- Q - U
+  
+  # Construimos Q̄
+  Q_bar <- Matrix(0, nrow = 2^(n+1), ncol = 2^(n+1))
+  Q_bar[1:2^n, 1:2^n] <- T
+  Q_bar[1:2^n, (2^n+1):(2^(n+1))] <- U
+  
+  return(Q_bar)
+}
+
+# Iniciza los parametros del modelo actual antes de su optimización.
+Learn.Indep <- function(pD){
+  n <- log(length(pD), base=2)        # Número de eventos
+  Theta <- matrix(0, nrow=n, ncol=n)  # Inicializa Theta
+  
+  for(i in 1:n){
+    pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)    
+    
+    perc <- sum(pD[,2])               # Proporción de los eventos observados
+    Theta[i,i] <- log(perc/(1-perc))
+  }
+  
+  return(round(Theta,2)) # Retorna la matriz Theta ajustada
+}
+
+# Learn.Indep modificado para incorporar Omega:
+Learn.Indep.WithOmega <- function(pD){
+  n <- log(length(pD), base=2)        # Número de eventos
+  Theta <- matrix(0, nrow=n, ncol=n)  # Inicializa Theta
+  Omega <- rep(1, n)                  # Inicializa Omega con valores neutros (1)
+  
+  for(i in 1:n){
+    pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)    
+    
+    perc <- sum(pD[,2])               # Proporción de los eventos observados
+    Theta[i,i] <- log(perc/(1-perc))
+    
+    # Inicializa Omega[i] basado en heurística
+    # Por ejemplo, podemos usar la frecuencia relativa del evento.
+    Omega[i] <- perc + 1  # Añadimos 1 para asegurar que Omega > 0
+  }
+  
+  # Retorna la matriz Theta ajustada y Omega
+  return(list(Theta = round(Theta,2), Omega = round(Omega,2)))
+}
+
+# Función para crear una subdiagonal de Q a partir de la línea ith de Theta.
+Q.Subdiag <- function(Theta, i){
+  row <- Theta[i,]
+  n <- length(row)
+  
+  # Empieza la subdiagonal con la tasa base de Theta_ii. 
+  s <- exp(row[i])
+  
+  # Duplica para cada factor Theta_ij, exceptuando cuando i = j.
+  for(j in 1:n){
+    s <- c(s, s * exp(row[j]) * (i != j))
+  }
+  
+  return(s)
+}
+
+# Para obtener la diagonal de Q.
+Q.Diag <- function(Theta, Omega = rep(1, ncol(Theta))){
+  n <- ncol(Theta)
+  dg <- rep(0, 2^n)
+  
+  for(i in 1:n){
+    # Incorpora Omega al calcular la subdiagonal
+    dg <- dg - Q.Subdiag(Theta, i) * exp(log(Omega[i])) # Aplica el sesgo de Omega
+  }
+  
+  return(dg)
+}
+
+# Crea un MHN aleatorio con parámetros Theta y Omega con transformación logarítmica.
+# Sparsity es dado como un porcentaje.
+# Función para generar Theta y Omega aleatorios
+Random.Theta.Omega <- function(n, sparsity = 0) {
+  Theta <- matrix(0, nrow = n, ncol = n)
+  
+  diag(Theta) <- rnorm(n)
+  nonZeros <- sample(which(lower.tri(Theta) | upper.tri(Theta)), 
+                     size = floor((n^2 - n) * (1 - sparsity)))
+  Theta[nonZeros] <- rnorm(length(nonZeros))
+  
+  Omega <- exp(rnorm(n))
+  
+  return(list(Theta = round(Theta, 2), Omega = round(Omega, 2)))
+}
+
+# Para calcular la stationary distribution
+Stationary.Distribution <- function(Theta, Omega, p0){
+  n <- nrow(Theta)
+  Q <- Build.Q(Theta)
+  U <- Matrix::Diagonal(2^n, x=c(1, Omega))
+  T <- Q - U
+  
+  # Se calcula la Distribución Estacionaria.
+  p_B_inf <- solve(diag(2^n) - Q %*% solve(U)) %*% p0
+  
+  return(p_B_inf)
+}
+
 @
 
-%4. Optimización inicial (Learn.Indep): Ajusta esta función para que también inicialice los parámetros del evento de observación. 
-%5.Simulación y ajuste de parámetros dinámicos: Si la observación tiene tasas que varían dinámicamente, añade lógica para actualizar Θ o Q en función de los datos observados.
 
 \printbibliography
 
