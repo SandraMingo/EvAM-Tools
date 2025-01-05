@@ -160,86 +160,44 @@ En este proyecto, hemos explorado el uso de \code{reticulate} para llamar al có
 
 En Python, se nombra cMHN como el modelo clásico de MHN, el cual es el implementado en \code{evamtools}. Por ello, hemos querido comparar los resultados de ambas formas, utilizando el mismo dataset en Python y en R. Los resultados han mostrado la misma tendencia en ambas opciones (relación positiva o negativa entre los genes), aunque los valores concretos varían. Al comparar los dos códigos, la diferencia radica en el cálculo de un valor óptimo de $\lambda$ ajustado a los datos en el caso de Python, mientras que \code{evamtools} permite especificarlo y, en caso contrario, utiliza el ajuste genérico de $1/n$. Al añadir manualmente dicho valor calculado por \code{mhn} en \code{evam}, los resultados de la matriz en ambos paquetes sí son idénticos. 
 
+A continuación se pueden observar los pasos que hemos seguido para ello:
+\begin{enumerate}
+\item Pasos previos y carga de datos y paquetes.
 <<eval=FALSE>>=
 library("reticulate")
 
-# Configurar reticulate para usar Python 3 y verificar su configuración:
+# Previamente es necesario configurar reticulate y verificarlo:
 use_python("/usr/bin/python3", required = TRUE)
 py_config()
 
-# Importar librerías
-mhn <- import("mhn")
-np <- import("numpy")
-plt <- import("matplotlib.pyplot")
-random <- import("random")
-
-# Cargar el archivo CSV en un dataframe con 500 observaciones, en R
-data <- read.csv('LUAD_500.csv')
-
-# Correr el código de python con la función "py_run_string"
+# Tras ello, podemos correr el código de python con la función "py_run_string" y así 
+# cargar los datos y paquetes y ejecutar las funciones de mhn:
 py_run_string("
 import random
 import pandas as pd
+import numpy as np
+from mhn.optimizers import cMHNOptimizer
 
 input = pd.read_csv('LUAD_500.csv')
-print (input.head())
 
-print('Number of observations:', len(input)) 
-print('Number of events:', len(input.columns))
+cMHN_opt = cMHNOptimizer()
+cMHN_opt.load_data_matrix(input)
+cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
+@
 
-print('Event frequencies:')
-input.sum(axis=0) / len(input)
-
-print('Distribution of active event counts across observations:')
-input.sum(axis=1).value_counts().sort_index()
-
-# En este caso no es necesario coger una muestra de 500 observaciones, por lo que:
-input_subset = input
-
-# Generar resultados
-result = input_subset.sum(axis=1).value_counts().sort_index()
-print (result)
-")
-
-# Acceder a los resultados de Python en R
-input_subset_python <- py$input_subset
-result <- py$result
-print(result)
-
-# Convertir la Serie de pandas a una lista en Python
-py_run_string("
-result_list = result.tolist()  
-")
-# Acceder a la lista desde R
-result_list <- py$result_list
-print(result_list)
-
-# Ejecutar las funciones de mhn usando reticulate
-py_run_string("from mhn.optimizers import cMHNOptimizer")
-py_run_string("cMHN_opt = cMHNOptimizer()")
-py_run_string("cMHN_opt.load_data_matrix(input_subset)")
-py_run_string("cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
-py_run_string("print(cMHN_opt)")
-
-######
-
-# Calcular el lambda óptimo que usa python
+\item Calcular el lambda óptima de Python y guardarla en R.
+<<eval=FALSE>>=
 py_run_string('
-lambda_min= 0.1 / len(input_subset)
-lambda_max = 100 / len(input_subset)
+lambda_min= 0.1 / len(input)
+lambda_max = 100 / len(input)
 
 print("Minimum lambda:", lambda_min)
 print("Maximum lambda:", lambda_max)
 
 n_cv_steps = 5
 
-import numpy as np
-
 lambda_sequence = np.exp(np.linspace(
     np.log(lambda_min + 1e-10), np.log(lambda_max + 1e-10), n_cv_steps))
-
-print("Lambda sequence:")
-lambda_sequence
 
 n_cv_folds = 3
 
@@ -248,78 +206,50 @@ cMHN_opt.set_device(cMHNOptimizer.Device.CPU)
 cMHN_lambda = cMHN_opt.lambda_from_cv(
     lambda_min=lambda_min, lambda_max=lambda_max, steps=n_cv_steps, nfolds=n_cv_folds,
     show_progressbar=True)
-
-import matplotlib.pyplot as plt
-
-# plot original lambda sequence
-plt.scatter(lambda_sequence, np.full(len(lambda_sequence), 1), color="black")
-
-# plot cross-validated lambdas
-plt.scatter(cMHN_lambda, 2, color="red")
-
-# labels
-plt.text(cMHN_lambda, 1.9, "cMHN", ha="center")
-
-# log scale
-plt.xscale("log")
-plt.yticks([])
-plt.ylabel("")
-plt.show()
 ')
 
-# Obtener las secuencias de lambda desde Python a R
-lambda_sequence <- py$lambda_sequence
+# De este modo se obtiene el lambda optima de Python y se guarda en R:
 cMHN_lambda <- py$cMHN_lambda
 
-#####
+@
 
-# Obtener el resultado de cMHN utilizando la lambda previa
+\item Obtención el modelo MHN de Python utilizando el lambda calculada y visualización de los resultados.
+<<eval=FALSE>>=
 py_run_string("
-# train cMHN
+# Se entrena y guarda el output de cMHN
 cMHN_opt.train(lam=cMHN_lambda)
-# save output
 cMHN_opt.result.save(filename='cMHN.csv')
-
-import json
-import pprint
-
-with open('cMHN_meta.json') as f:
-    cMHN_log = json.load(f)
-
-pprint.pprint(cMHN_log)
 ")
 
-######
+# Con esto podremos obtener el gráfico cMHN que genera Python:
+py_run_string("
+import matplotlib.pyplot as plt
+cMHN_opt.result.plot()
+plt.show()")
 
-# Obtener el gráfico cMHN
-py_run_string("import matplotlib.pyplot as plt")
-
-py_run_string("cMHN_opt.result.plot()")
-
-# Mostrar el gráfico generado
-py_run_string("plt.show()")
-
-# O mostrar la matriz generada
+# Y con esto mostrar la matriz generada:
 py_run_string("print(cMHN_opt.result)")
+@
 
-
-###
-#####
-#######
-## Ahora los resultados obtenidos con la función evam
-
+\item Con el paquete \code{evamtools} comprobamos los resultados que obtendríamos con esa misma base de datos.
+<<eval=FALSE>>=
 library("evamtools")
 
+data <- read.csv('LUAD_500.csv')
 datos <- evam(data, methods = "MHN")
-datos$MHN_theta      # Se corresponde con cMHN_opt.result en Python
-# No da exactamente los mismos resultados
-# CUIDADO. El orden de las filas y las columnas no coincide en Python y R.
+datos$MHN_theta         # Se corresponde con cMHN_opt.result en Python
+                        # No da exactamente los mismos resultados y el orden de las filas 
+                        # y las columnas no coincide en Python y R.
+plot_evam(datos, plot_type = "trans_mat", methods = "MHN", top_paths = 5)
+@
 
-# Sin embargo, al repetir evam utilizando la lambda de Python...
+\item Finalmente, repetimos este último paso utilizando el lambda calculada en Python.
+<<eval=FALSE>>=
 datos2 <- evam(data, methods = "MHN", mhn_opts = list(lambda = cMHN_lambda))
 datos2$MHN_theta
-# ... sí que coinciden los resultados.
 @
+Tras ello se comprueba que, efectivamente, el resultado es el mismo.
+
 
 \subsection{Modificar evamtools para incluir la corrección del sesgo}
 %Pasos a seguir:
