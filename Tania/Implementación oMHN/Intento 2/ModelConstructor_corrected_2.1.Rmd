@@ -315,11 +315,12 @@ print(p_A_infty)
 
 ####
 ## Y para ver las distribuciones estacionarias podemos usar:
+p0 <- rep(1, 2^n) / 2^n  # Distribución inicial uniforme
 p_with_bias <- Stationary.Distribution(Theta, Omega, p0)
 
 # Mostrar las distribuciones estacionarias
 cat("\nDistribución estacionaria sin corrección de sesgo (Omega = 1):\n")
-print(p_no_bias)
+print(p_with_bias)
 
 ```
 
