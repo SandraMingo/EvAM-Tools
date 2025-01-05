@@ -151,7 +151,7 @@ Random.Theta.Omega <- function(n, sparsity=0){
 ```
 
 ```{r}
-# Para calcular la stationary distribution
+# Para calcular la stationary distribution.
 Stationary.Distribution <- function(Theta, Omega, p0){
   n <- nrow(Theta)
   Q <- Build.Q(Theta)
