@@ -177,7 +177,7 @@ Stationary.Distribution <- function(Theta, Omega, p0){
 
 ```{r}
 # Generamos un modelo con 4 eventos (n=4) y un 30% de esparsidad
-n <- 4
+n <- 3
 result <- Random.Theta.Omega(n, sparsity=0.3)
 Theta <- result$Theta
 Omega <- result$Omega
@@ -190,7 +190,7 @@ print(Omega)
 
 ```{r}
 # Efecto multiplicativo de la observación (Omega)
-Omega <- rep(2, n)  # Asumimos un efecto multiplicativo de 2 para cada evento de progresión
+#Omega <- rep(2, n)  # Asumimos un efecto multiplicativo de 2 para cada evento de progresión
 
 # Construimos la matriz Q extendida
 Q_bar <- Build.Q.Extended(Theta, Omega)
@@ -229,6 +229,11 @@ sum(Q_extended)        # Si sumamos TODOS los valores, da prácticamente 0.
 
 
 ```{r}
+n <- 4
+result <- Random.Theta.Omega(n, sparsity=0.3)
+Theta <- result$Theta
+Omega <- result$Omega
+
 # Construye la matriz Q sin corrección de sesgo (sin Omega)
 Omega_no_effect <- rep(1, 4)  # Sin efecto multiplicativo (Omega = 1)
 Q_no_effect <- Build.Q.Extended(Theta, Omega_no_effect)
@@ -248,36 +253,12 @@ print(diff)
 
 ```
 
-## En este me sale un error
-
-```{r}
-#install.packages("expm")
-library(expm)
-
-# Supongamos que tienes la distribución inicial p(0) como (1, 0, ..., 0) (solo el primer estado es ocupado)
-p_0 <- rep(0, length(Q_extended))
-p_0[1] <- 1  # Empieza en el primer estado
-
-# Resolvemos la ecuación de Kolmogorov: p_A(t) = exp(t*T) * p(0)
-# Como exp(t*T) converge a 0 a medida que t se hace grande, podemos usar una aproximación con un tiempo largo (t)
-t_large <- 1000
-p_A_infty <- expm::expm(t_large * Matrix::Matrix(Q_extended[1:nrow(Q_extended), 1:nrow(Q_extended)])) %*% p_0
-
-# La distribución estacionaria p_B(∞) se puede obtener mediante la matriz U:
-p_B_infty <- solve(Matrix::Matrix(Q_extended)) %*% p_0
-
-# Compara la distribución estacionaria esperada con la obtenida
-print("Distribución estacionaria p_B(∞) calculada:")
-print(p_B_infty)
-
-```
-
-
-
-
 ```{r}
 # Hacemos algunas comprobaciones.
-Theta <- Random.Theta(3)  # 3 eventos principales + 1 observación
+result <- Random.Theta.Omega(3)  # 3 eventos principales + 1 observación
+Theta <- result$Theta
+Omega <- result$Omega
+
 Q <- Build.Q.Extended(Theta, Omega)
 
 # Validar que las filas sumen a 0
@@ -292,7 +273,9 @@ Q[nrow(Q), ]  # Verificar la última fila (evento de observación)
 # Testeamos la función Build.Q con Omega y Theta aleatorio
 n <- 3  # Número de eventos
 Omega <- c(1.2, 0.8, 1.1)  # Efectos de la observación
-Theta <- Random.Theta(n)  # Genera una matriz aleatoria de Theta
+results <- Random.Theta.Omega(n)  # Genera una matriz aleatoria de Theta
+Theta <- results$Theta
+Omega <- results$Omega
 
 # Generamos la matriz de transición extendida
 Q_extended <- Build.Q.Extended(Theta, Omega)
