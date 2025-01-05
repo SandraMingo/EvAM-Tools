@@ -166,12 +166,11 @@ A continuación se pueden observar los pasos que hemos seguido para ello:
 <<eval=FALSE>>=
 library("reticulate")
 
-# Previamente es necesario configurar reticulate y verificarlo:
+# Configuración y verificación de reticulate
 use_python("/usr/bin/python3", required = TRUE)
 py_config()
 
-# Tras ello, podemos correr el código de python con la función "py_run_string" y así 
-# cargar los datos y paquetes y ejecutar las funciones de mhn:
+# Carga de datos y módulos y ejecución de mhn
 py_run_string("
 import random
 import pandas as pd
@@ -185,7 +184,7 @@ cMHN_opt.load_data_matrix(input)
 cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
 @
 
-\item Calcular el lambda óptima de Python y guardarla en R.
+\item Calcular el valor óptimo de $\lambda$ de Python y guardarlo en R.
 <<eval=FALSE>>=
 py_run_string('
 lambda_min= 0.1 / len(input)
@@ -208,12 +207,10 @@ cMHN_lambda = cMHN_opt.lambda_from_cv(
     show_progressbar=True)
 ')
 
-# De este modo se obtiene el lambda optima de Python y se guarda en R:
 cMHN_lambda <- py$cMHN_lambda
-
 @
 
-\item Obtención el modelo MHN de Python utilizando el lambda calculada y visualización de los resultados.
+\item Obtención del modelo MHN de Python utilizando el valor $\lambda$ calculado y visualización de los resultados.
 <<eval=FALSE>>=
 py_run_string("
 # Se entrena y guarda el output de cMHN
@@ -221,33 +218,34 @@ cMHN_opt.train(lam=cMHN_lambda)
 cMHN_opt.result.save(filename='cMHN.csv')
 ")
 
-# Con esto podremos obtener el gráfico cMHN que genera Python:
+# Obtención del gráfico cMHN de Python
 py_run_string("
 import matplotlib.pyplot as plt
 cMHN_opt.result.plot()
 plt.show()")
 
-# Y con esto mostrar la matriz generada:
+# Matriz generada
 py_run_string("print(cMHN_opt.result)")
 @
 
-\item Con el paquete \code{evamtools} comprobamos los resultados que obtendríamos con esa misma base de datos.
+\item Con el paquete \code{evamtools} comprobamos los resultados que obtendríamos con esos mismos datos.
 <<eval=FALSE>>=
 library("evamtools")
 
 data <- read.csv('LUAD_500.csv')
 datos <- evam(data, methods = "MHN")
-datos$MHN_theta         # Se corresponde con cMHN_opt.result en Python
-                        # No da exactamente los mismos resultados y el orden de las filas 
-                        # y las columnas no coincide en Python y R.
+datos$MHN_theta # Se corresponde con cMHN_opt.result en Python
 @
 
-\item Finalmente, repetimos este último paso utilizando el lambda calculada en Python.
+Vemos que la matriz $\Theta$ no coincide en Python y R, teniendo un diferente orden de filas y columnas y diferentes valores por celda.
+
+\item Finalmente, repetimos este último paso utilizando el valor $\lambda$ calculado en Python.
 <<eval=FALSE>>=
 datos2 <- evam(data, methods = "MHN", mhn_opts = list(lambda = cMHN_lambda))
 datos2$MHN_theta
 @
-Tras ello se comprueba que, efectivamente, el resultado es el mismo.
+Tras ello, se comprueba que, efectivamente, el resultado es el mismo con ambas herramientas.
+\end{enumerate}
 
 
 \subsection{Modificar evamtools para incluir la corrección del sesgo}
@@ -263,7 +261,6 @@ Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero
 
 Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
 <<>>=
-#Importar librería Matrix:
 library("Matrix")
 
 # Construye la matriz Q de tasa de transición desde sus subdiagonales.
