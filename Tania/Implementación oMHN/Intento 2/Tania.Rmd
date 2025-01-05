@@ -11,6 +11,9 @@ Para implementar la corrección por sesgo en el código de R usando el modelo oM
 En el código de Build.Q y Q.Subdiag, hay que modificar las transiciones para que el evento de observación esté incluido. Esto implica construir la nueva matriz de transición extendida que ahora tiene un bloque adicional (el evento de observación).
 
 ```{r}
+#Importar librería Matrix:
+library("Matrix")
+
 # Construye la matriz Q de tasa de transición desde sus subdiagonales.
 # No tiene en cuenta Omega
 Build.Q <- function(Theta) {
