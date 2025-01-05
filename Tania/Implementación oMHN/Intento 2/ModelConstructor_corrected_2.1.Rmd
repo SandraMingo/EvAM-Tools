@@ -246,37 +246,13 @@ print(diff)
 
 ```
 
-## En este me sale un error
-
-```{r}
-#install.packages("expm")
-library(expm)
-
-# Supongamos que tienes la distribución inicial p(0) como (1, 0, ..., 0) (solo el primer estado es ocupado)
-p_0 <- rep(0, length(Q_extended))
-p_0[1] <- 1  # Empieza en el primer estado
-
-# Resolvemos la ecuación de Kolmogorov: p_A(t) = exp(t*T) * p(0)
-# Como exp(t*T) converge a 0 a medida que t se hace grande, podemos usar una aproximación con un tiempo largo (t)
-t_large <- 1000
-p_A_infty <- expm::expm(t_large * Matrix::Matrix(Q_extended[1:nrow(Q_extended), 1:nrow(Q_extended)])) %*% p_0
-
-# La distribución estacionaria p_B(∞) se puede obtener mediante la matriz U:
-p_B_infty <- solve(Matrix::Matrix(Q_extended)) %*% p_0
-
-# Compara la distribución estacionaria esperada con la obtenida
-print("Distribución estacionaria p_B(∞) calculada:")
-print(p_B_infty)
-
-```
-
 
 
 
 ```{r}
 # Hacemos algunas comprobaciones.
-Theta <- Random.Theta(3)  # 3 eventos principales + 1 observación
-Q <- Build.Q.Extended(Theta, Omega)
+Result <- Random.Theta.Omega(3)  # 3 eventos principales + 1 observación
+Q <- Build.Q.Extended(Result$Theta, Result$Omega)
 
 # Validar que las filas sumen a 0
 all.equal(rowSums(as.matrix(Q)), rep(0, nrow(Q)))  # Debe ser TRUE
