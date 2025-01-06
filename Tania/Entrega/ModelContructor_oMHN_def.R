@@ -68,7 +68,7 @@ Build.Q.Extended <- function(Theta, Omega) {
   # Crear la matriz U de manera eficiente
   U <- Matrix(0, nrow = 2^n, ncol = 2^n)
   U[cbind(1:(2^n), 1:(2^n))] <- omega_products  # Asignar los productos en la diagonal
-  
+
   # Calcular T
   T <- Q - U
   
