@@ -80,6 +80,38 @@ Build.Q.Extended <- function(Theta, Omega) {
   return(Q_bar)
 }
 
+##Con usma de columnas cero:
+Build.Q.Extended <- function(Theta, Omega) {
+  n <- nrow(Theta)
+  Q <- Build.Q(Theta)
+  
+  # Crear una matriz binaria que representa todos los estados posibles (2^n filas, n columnas)
+  states <- matrix(rep(0:(2^n - 1), each = n), ncol = n)
+  states <- t(apply(states, 1, function(x) as.integer(intToBits(x)[1:n])))  # Binario en forma de matriz
+  
+  # Vector de productos Omega, cada fila corresponderá a un estado
+  omega_products <- apply(states, 1, function(state) prod(Omega[which(state == 1)]))
+  
+  # Crear la matriz U de manera eficiente
+  U <- Matrix(0, nrow = 2^n, ncol = 2^n, sparse = TRUE)
+  U[cbind(1:(2^n), 1:(2^n))] <- omega_products  # Asignar los productos en la diagonal
+  
+  # Calcular T
+  T <- Q - U
+  
+  # Crear la matriz Q_bar de tamaño 2^(n+1)
+  Q_bar <- Matrix(0, nrow = 2^(n+1), ncol = 2^(n+1), sparse = TRUE)
+  Q_bar[1:2^n, 1:2^n] <- T
+  Q_bar[1:2^n, (2^n+1):(2^(n+1))] <- U
+  
+  # Ajustar la última fila para que la suma de las columnas sea cero
+  column_sums <- colSums(Q_bar)
+  Q_bar[2^(n+1), 1:(2^(n+1)-1)] <- -column_sums[1:(2^(n+1)-1)]
+  
+  return(Q_bar)
+}
+
+
 ########
 
 #Get the diagonal of Q.

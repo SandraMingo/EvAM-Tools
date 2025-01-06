@@ -312,7 +312,7 @@ Q <- Build.Q.Extended(Theta, Omega)
 # Validar que las filas sumen a 0
 all.equal(rowSums(as.matrix(Q)), rep(0, nrow(Q)))  # Debe ser TRUE
 # Validar que las columnas sumen a 0
-all.equal(colSums(as.matrix(Q)), rep(0, ncol(Q)))  # Debe ser TRUE
+all.equal(colSums(as.matrix(Q)), rep(0, ncol(Q)))
 
 # Inspeccionar las tasas del evento de observación
 Q[nrow(Q), ]  # Verificar la última fila (evento de observación)
