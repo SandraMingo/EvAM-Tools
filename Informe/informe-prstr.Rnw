@@ -280,99 +280,34 @@ También podemos encontrar otro ficheros como \code{MHN\_\_ExampleApplications.R
 
 Lo primero de todo, para implementar la corrección por sesgo, tenemos que ajustar las funciones que construyen las matrices de tasas de transición y las distribuciones de probabilidad.
 
-En el fichero \code{MHN\_\_ModelConstruction.R}
-
-
+En el fichero \code{MHN\_\_ModelConstruction.R} es necesario hacer la modificación de algunas funciones, concretamente de las funciones Random.Theta (sustituida a Random.Theta.Omega), y Learn.Indep (sustituida a Learn.Indep.Omega). Además, se ha añadido la función Build.Q.Extended, que incorpora el nuevo parámetro $\Omega$. El resto de funciones Q.Subdiag, Build.Q y Q.Diag no han sido modificadas. 
 
 <<>>=
 library("Matrix")
 
-# Construye la matriz Q de tasa de transición desde sus subdiagonales.
-# No tiene en cuenta Omega
-Build.Q <- function(Theta) {
-  n <- nrow(Theta)
+#Crear un MHN random (log-transformado) con parámetros Theta y Omega.
+#Sparsity se debe dar como porcentaje.
+Random.Theta.Omega <- function(n, sparsity = 0) {
+  Theta <- matrix(0, nrow = n, ncol = n)
   
-  Subdiags <- matrix(0, nrow = 2^n, ncol = n)
-  for (i in 1:n) {
-    Subdiags[, i] <- Q.Subdiag(Theta, i)
-  }
+  diag(Theta) <- NA
+  nonZeros <- sample(which(!is.na(Theta)), size = floor((n^2 - n) * (1 - sparsity)))
   
-  Q <- bandSparse(2^n, k = -2^(0:(n-1)), diagonals = Subdiags)
-  diag(Q) <- -rowSums(Q)
+  Theta[nonZeros] <- rnorm(length(nonZeros))
+  diag(Theta) <- rnorm(n)
   
-  return(Q)
+  Omega <- exp(rnorm(n))
+  
+  return(list(Theta = round(Theta, 2), Omega = round(Omega, 2)))
 }
 
-# Construimos la matriz Q̄ de tasa de transición extendida.
-# Sí tiene en cuenta Omega.
-Build.Q.Extended <- function(Theta, Omega) {
-  n <- nrow(Theta)
-  Q <- Build.Q(Theta)
-  
-  # Creamos una matriz U que aplica Omega a todos los estados
-  U <- Matrix(0, nrow = 2^n, ncol = 2^n)
-  for (i in 0:(2^n - 1)) {
-    state <- as.integer(intToBits(i)[1:n])
-    omega_product <- prod(Omega[which(state == 1)])
-    U[i + 1, i + 1] <- omega_product
-  }
-  
-  # Creamos una Matriz T
-  T <- Q - U
-  
-  # Construimos Q̄
-  Q_bar <- Matrix(0, nrow = 2^(n+1), ncol = 2^(n+1))
-  Q_bar[1:2^n, 1:2^n] <- T
-  Q_bar[1:2^n, (2^n+1):(2^(n+1))] <- U
-  
-  return(Q_bar)
-}
-
-# Iniciza los parametros del modelo actual antes de su optimización.
-Learn.Indep <- function(pD){
-  n <- log(length(pD), base=2)        # Número de eventos
-  Theta <- matrix(0, nrow=n, ncol=n)  # Inicializa Theta
-  
-  for(i in 1:n){
-    pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)    
-    
-    perc <- sum(pD[,2])               # Proporción de los eventos observados
-    Theta[i,i] <- log(perc/(1-perc))
-  }
-  
-  return(round(Theta,2)) # Retorna la matriz Theta ajustada
-}
-
-# Learn.Indep modificado para incorporar Omega:
-Learn.Indep.WithOmega <- function(pD){
-  n <- log(length(pD), base=2)        # Número de eventos
-  Theta <- matrix(0, nrow=n, ncol=n)  # Inicializa Theta
-  Omega <- rep(1, n)                  # Inicializa Omega con valores neutros (1)
-  
-  for(i in 1:n){
-    pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)    
-    
-    perc <- sum(pD[,2])               # Proporción de los eventos observados
-    Theta[i,i] <- log(perc/(1-perc))
-    
-    # Inicializa Omega[i] basado en heurística
-    # Por ejemplo, podemos usar la frecuencia relativa del evento.
-    Omega[i] <- perc + 1  # Añadimos 1 para asegurar que Omega > 0
-  }
-  
-  # Retorna la matriz Theta ajustada y Omega
-  return(list(Theta = round(Theta,2), Omega = round(Omega,2)))
-}
-
-# Función para crear una subdiagonal de Q a partir de la línea ith de Theta.
+# Crear una única diagonal de Q a partir de Theta.
 Q.Subdiag <- function(Theta, i){
   row <- Theta[i,]
   n <- length(row)
   
-  # Empieza la subdiagonal con la tasa base de Theta_ii. 
   s <- exp(row[i])
   
-  # Duplica para cada factor Theta_ij, exceptuando cuando i = j.
   for(j in 1:n){
     s <- c(s, s * exp(row[j]) * (i != j))
   }
@@ -380,35 +315,84 @@ Q.Subdiag <- function(Theta, i){
   return(s)
 }
 
-# Para obtener la diagonal de Q.
-Q.Diag <- function(Theta, Omega = rep(1, ncol(Theta))){
+
+# Construir la matriz de transición de Q de sus subdiagonales.
+Build.Q <- function(Theta){
+  n <- nrow(Theta)
+  
+  Subdiags <- c()
+  for(i in 1:n){
+    Subdiags <- cbind(Subdiags, Q.Subdiag(Theta, i))
+  }
+  
+  Q <- Matrix::bandSparse(2^n, k = -2^(0 : (n-1)), diagonals=Subdiags)
+  diag(Q) <- -colSums(Q)
+  
+  return(Q)
+}
+
+#Construir la matriz extendida (incorporando el parámetro Omega)
+Build.Q.Extended <- function(Theta, Omega) {
+  n <- nrow(Theta)
+  Q <- Build.Q(Theta)
+  
+  # Crear una matriz binaria que representa todos los estados posibles (2^n filas, n columnas)
+  states <- matrix(rep(0:(2^n - 1), each = n), ncol = n)
+  states <- t(apply(states, 1, function(x) as.integer(intToBits(x)[1:n])))  # Binario en forma de matriz
+  
+  # Vector de productos Omega, cada fila corresponderá a un estado
+  omega_products <- apply(states, 1, function(state) prod(Omega[which(state == 1)]))
+  
+  # Crear la matriz U de manera eficiente
+  U <- Matrix(0, nrow = 2^n, ncol = 2^n)
+  U[cbind(1:(2^n), 1:(2^n))] <- omega_products  # Asignar los productos en la diagonal
+  
+  # Calcular T
+  T <- Q - U
+  
+  # Crear la matriz Q_bar de tamaño 2^(n+1)
+  Q_bar <- Matrix(0, nrow = 2^(n+1), ncol = 2^(n+1))
+  Q_bar[1:2^n, 1:2^n] <- T
+  Q_bar[1:2^n, (2^n+1):(2^(n+1))] <- U
+  
+  return(Q_bar)
+}
+
+# Obtener la diagonal de Q.
+Q.Diag <- function(Theta){
   n <- ncol(Theta)
   dg <- rep(0, 2^n)
   
   for(i in 1:n){
-    # Incorpora Omega al calcular la subdiagonal
-    dg <- dg - Q.Subdiag(Theta, i) * exp(log(Omega[i])) # Aplica el sesgo de Omega
+    dg <- dg - Q.Subdiag(Theta, i)
   }
   
   return(dg)
 }
 
-# Crea un MHN aleatorio con parámetros Theta y Omega con transformación logarítmica.
-# Sparsity es dado como un porcentaje.
-# Función para generar Theta y Omega aleatorios
-Random.Theta.Omega <- function(n, sparsity = 0) {
-  Theta <- matrix(0, nrow = n, ncol = n)
-  
-  diag(Theta) <- rnorm(n)
-  nonZeros <- sample(which(lower.tri(Theta) | upper.tri(Theta)), 
-                     size = floor((n^2 - n) * (1 - sparsity)))
-  Theta[nonZeros] <- rnorm(length(nonZeros))
-  
-  Omega <- exp(rnorm(n))
-  
-  return(list(Theta = round(Theta, 2), Omega = round(Omega, 2)))
-}
 
+# Learn.Indep modificado para incorporar el parámetro Omega:
+Learn.Indep.Omega <- function(pD, Omega){
+  n <- log(length(pD), base=2)
+  Theta <- matrix(0, nrow=n, ncol=n)
+  
+  # Reorganizar pD según el número de eventos n (se hace un reshape)
+  pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)  
+  
+  for(i in 1:n){
+    # Calcular la probabilidad de que el evento i haya ocurrido (dependiente de Omega)
+    perc <- sum(pD[, 2]) * Omega[i]  # Incorporando Omega en el cálculo
+    
+    # La tasa de transición Theta[i, i] depende de Omega y la probabilidad de ocurrencia
+    Theta[i, i] <- log(perc / (1 - perc))
+  }
+  
+  return(round(Theta, 2))
+}
+@
+
+
+<<>>=
 # Para calcular la stationary distribution
 Stationary.Distribution <- function(Theta, Omega, p0){
   n <- nrow(Theta)
