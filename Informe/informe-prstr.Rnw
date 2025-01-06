@@ -257,9 +257,29 @@ Tras ello, se comprueba que, efectivamente, el resultado es el mismo con ambas h
 %evamtools -> R -> MHN__ModelConstruction.R
 %Este código define varias funciones clave que probablemente se necesitarán modificar para incorporar un modelo oMHN
 %%%COMPROBAR TODO BIEN, NO ESTÁ LIBRE DE ERRORES 
-Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero \code{MHN\_\_ModelConstruction.R}, estando relacionado con la construcción y manipulación de la matriz de transición ($Q$) basada en los parámetros de $\Theta$. 
 
-Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
+%Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero \code{MHN\_\_ModelConstruction.R}, estando relacionado con la construcción y manipulación de la matriz de transición ($Q$) basada en los parámetros de $\Theta$. 
+
+%Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
+
+Para llevar a cabo la implementación de la coreeción del sesgo es necesaria la integración de varios pasos, el primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donode se podrían insertar la lógica de correción además de consultar el código del módulo \code{mhn}, donde ya está presente esta correción del sesgo.
+
+Dentro de \code{evamtools}, existen varios ficheros potenciales donde incluir esta correción del sesgo.
+
+\begin{enumerate}
+\item \code{MHN\_\_ModelConstruction.R}: En este archivo se definen las funciones de construcción del modelo MHN. En él es necesario agregar el parámetro $\Omega$  para tener en cuenta la corrección de sesgo.
+\item \code{MHN\_\_Likelihood.R}: En este archivo se definen las funciones de verosimilitud del modelo MHN. En él podría ser necesario modificar las funciones para incorporar la corrección de sesgo en el cálculo de la verosimilitud.
+\item \code{MHN\_\_RegularizedOptimization.R}: En este archivo se maneja el proceso de optimización para el ajuste del modelo. Es necesario ajustar el procedimiento de optimización del arámetro $\Omega$ añadido.
+\end{enumerate}
+
+También podemos encontrar otro ficheros como \code{MHN\_\_ExampleApplications.R}, \code{MHN\_\_InlineFunctions.R}, \code{MHN\_\_UtilityFunctions.R}, que podrían ser actualizados, por ejemplo, para mostrar el uso del modelo de correción de sesgo. No obstante, estas modificaciones no son tan importantes.%queda bien??
+
+Lo primero de todo, para implementar la corrección por sesgo, tenemos que ajustar las funciones que construyen las matrices de tasas de transición y las distribuciones de probabilidad.
+
+En el fichero \code{MHN\_\_ModelConstruction.R}
+
+
+
 <<>>=
 library("Matrix")
 
