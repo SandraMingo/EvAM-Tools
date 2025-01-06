@@ -2,21 +2,6 @@
 
 #Create a random MHN with (log-transformed) parameters Theta and Omega.
 #Sparsity is given as percentage.
-
-Random.Theta.Omega <- function(n, sparsity = 0) {
-  Theta <- matrix(0, nrow = n, ncol = n)
-  
-  diag(Theta) <- rnorm(n)
-  nonZeros <- sample(which(lower.tri(Theta) | upper.tri(Theta)), 
-                     size = floor((n^2 - n) * (1 - sparsity)))
-  Theta[nonZeros] <- rnorm(length(nonZeros))
-  
-  Omega <- exp(rnorm(n))
-  
-  return(list(Theta = round(Theta, 2), Omega = round(Omega, 2)))
-}
-
-
 Random.Theta.Omega <- function(n, sparsity = 0) {
   Theta <- matrix(0, nrow = n, ncol = n)
   
@@ -32,9 +17,7 @@ Random.Theta.Omega <- function(n, sparsity = 0) {
   return(list(Theta = round(Theta, 2), Omega = round(Omega, 2)))
 }
 
-######################################################################################
-
-# Create a single subdiagonal of Q from the ith row in Theta.
+# Create a single subdiagonal of Q from the with row in Theta.
 # It does not depend from Omega so theres no need to change.
 Q.Subdiag <- function(Theta, i){
   row <- Theta[i,]
@@ -51,28 +34,10 @@ Q.Subdiag <- function(Theta, i){
   return(s)
 }
 
-#Con Omega --> No
-
-Q.Subdiag <- function(Theta, Omega, i) {
-  row <- Theta[i, ]
-  n <- length(row)
-  
-  # Inicializar la subdiagonal con el término base modificado por Omega
-  s <- exp(row[i]) * Omega[i]
-  
-  # Iterar por la fila para calcular los términos adicionales
-  for (j in 1:n) {
-    s <- c(s, s * exp(row[j]) * Omega[j] * (i != j))
-  }
-  
-  return(s)
-}
-
 #######
 ## No change
 
 #Build the transition rate matrix Q from its subdiagonals.
-
 Build.Q <- function(Theta){
   n <- nrow(Theta)
   
@@ -89,7 +54,6 @@ Build.Q <- function(Theta){
 
 
 #########
-
 Build.Q.Extended <- function(Theta, Omega) {
   n <- nrow(Theta)
   Q <- Build.Q(Theta)
@@ -150,27 +114,5 @@ Learn.Indep.Omega <- function(pD, Omega){
   }
   
   return(round(Theta, 2))
-}
-
-#Este calcula Omega dentro de la funcion de manera heurística
-
-Learn.Indep.WithOmega <- function(pD){
-  n <- log(length(pD), base=2)        # Número de eventos
-  Theta <- matrix(0, nrow=n, ncol=n)  # Inicializa Theta
-  Omega <- rep(1, n)                  # Inicializa Omega con valores neutros (1)
-  
-  for(i in 1:n){
-    pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)    
-    
-    perc <- sum(pD[,2])               # Proporción de los eventos observados
-    Theta[i,i] <- log(perc/(1-perc))
-    
-    # Inicializa Omega[i] basado en heurística
-    # Por ejemplo, podemos usar la frecuencia relativa del evento.
-    Omega[i] <- perc + 1  # Añadimos 1 para asegurar que Omega > 0
-  }
-  
-  # Retorna la matriz Theta ajustada y Omega
-  return(list(Theta = round(Theta,2), Omega = round(Omega,2)))
 }
 

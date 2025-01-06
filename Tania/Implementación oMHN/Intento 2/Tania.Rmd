@@ -125,6 +125,26 @@ Learn.Indep.WithOmega <- function(pD){
   # Retorna la matriz Theta ajustada y Omega
   return(list(Theta = round(Theta,2), Omega = round(Omega,2)))
 }
+
+
+Learn.Indep <- function(pD, Omega){
+  n <- log(length(pD), base=2)
+  Theta <- matrix(0, nrow=n, ncol=n)
+  
+  # Reorganizar pD según el número de eventos n (se hace un reshape)
+  pD <- matrix(pD, nrow=2^(n-1), ncol=2, byrow=T)  
+    
+  for(i in 1:n){
+    # Calcular la probabilidad de que el evento i haya ocurrido (dependiente de Omega)
+    perc <- sum(pD[, 2]) * Omega[i]  # Incorporando Omega en el cálculo
+    
+    # La tasa de transición Theta[i, i] depende de Omega y la probabilidad de ocurrencia
+    Theta[i, i] <- log(perc / (1 - perc))
+  }
+  
+  return(round(Theta, 2))
+}
+
 ```
 
 
