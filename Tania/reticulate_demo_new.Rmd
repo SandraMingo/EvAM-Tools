@@ -1,0 +1,427 @@
+---
+title: "Reticulate_demo"
+output: html_document
+date: "2025-01-05"
+---
+
+```{r}
+# Instalar mhn en el contenedor
+## cmd de windows --> docker ps --> coger container ID
+## docker exec -it <container_ID> bash
+## verificar que python esta instalado --> python --version
+## Si no esta instalado: 
+## apt-get update
+## apt-get install python3 python3-pip -y
+## Verificar que ahora si esta instalado: python3 --version (a mi me sale Python 3.10.12)
+## Hacer pip install mhn para instalar el paquete mhn en el contenedor
+## Verificar que se ha intalado de forma correcta:
+## python3 -c "import mhn; print(mhn.__version__)"
+## Deberia devolver 1.0.0
+## Ahora si podemos configurar reticulate
+
+```
+
+## Instalar y cargar reticulate en R
+
+```{r}
+# # Instalar 'reticulate' si no está instalado
+# install.packages("reticulate")
+
+# Cargar el paquete 'reticulate'
+library("reticulate")
+
+```
+
+
+```{r}
+# Configurar reticulate para usar Python 3
+use_python("/usr/bin/python3", required = TRUE)
+
+# Verificar la configuración de Python
+py_config()
+
+```
+
+```{r}
+# Importar librerías mhn
+mhn <- import("mhn")
+
+# Usar reticulate para obtener el atributo __version__ del paquete mhn
+mhn_version <- py_get_attr(mhn, "__version__")
+
+# Imprimir la versión
+print(mhn_version)
+```
+
+## Cargar los datos tanto en R como Python y los inspeccionamos en este último
+
+```{r}
+# Cargar el archivo CSV en un dataframe en R
+data <- read.csv('LUAD_n12.csv')
+
+# Asegurarse de que los datos se carguen correctamente
+head(data)
+
+py_run_string("
+import random
+import pandas as pd
+
+input = pd.read_csv('LUAD_n12.csv')
+print (input.head())
+
+print('Number of observations:', len(input)) 
+print('Number of events:', len(input.columns))
+
+print('Event frequencies:')
+input.sum(axis=0) / len(input)
+
+print('istribution of active event counts across observations:')
+input.sum(axis=1).value_counts().sort_index()
+
+# The dataset is a little large to be used completely in this notebook, so let's only take a part of the data:
+
+# Establecer semilla para reproducibilidad
+random.seed(6)
+
+# Crear un subconjunto aleatorio de datos
+input_subset = input.sample(n=500)
+
+# Generar resultados
+result = input_subset.sum(axis=1).value_counts().sort_index()
+print (result)
+")
+
+#Para acceder a los resultados desde R
+result <- py$result
+print(result)
+```
+## Creamos los objetos de la clase oMHNOptimizer y cMHNOptimizer del módulo optimizer
+## Elegimos las penalizaciones de cada modelo
+
+```{r}
+# Ejecutar las funciones de Python usando reticulate
+py_run_string("from mhn.optimizers import oMHNOptimizer, cMHNOptimizer")
+py_run_string("cMHN_opt = cMHNOptimizer()")
+py_run_string("oMHN_opt = oMHNOptimizer()")
+
+# Cargar los datos en los optimizadores
+py_run_string("cMHN_opt.load_data_matrix(input_subset)")
+py_run_string("oMHN_opt.load_data_matrix(input_subset)")
+
+# Establecer las penalizaciones para cMHN y oMHN
+py_run_string("cMHN_opt.set_penalty(cMHN_opt.Penalty.L1)")
+py_run_string("oMHN_opt.set_penalty(oMHN_opt.Penalty.SYM_SPARSE)")
+
+# Verificar si se cargaron correctamente los datos y la configuración
+py_run_string("print(cMHN_opt)")
+py_run_string("print(oMHN_opt)")
+
+```
+
+## Calculo de la lambda óptima
+
+```{r}
+# Crear los valores en Python
+py_run_string("
+lambda_min = 0.1 / len(input_subset)
+lambda_max = 100 / len(input_subset)
+
+print('Minimum lambda:', lambda_min)
+print('Maximum lambda:', lambda_max)
+
+n_cv_steps = 5
+
+import numpy as np
+
+lambda_sequence = np.exp(np.linspace(
+    np.log(lambda_min + 1e-10), np.log(lambda_max + 1e-10), n_cv_steps))
+
+print('Lambda sequence:')
+lambda_sequence
+
+n_cv_folds = 3
+
+cMHN_opt.set_device(cMHNOptimizer.Device.CPU)
+oMHN_opt.set_device(cMHNOptimizer.Device.CPU)
+
+cMHN_lambda = cMHN_opt.lambda_from_cv(
+    lambda_min=lambda_min, lambda_max=lambda_max, steps=n_cv_steps, nfolds=n_cv_folds, show_progressbar=True
+)
+
+oMHN_lambda = oMHN_opt.lambda_from_cv(
+    lambda_min=lambda_min, lambda_max=lambda_max, steps=n_cv_steps, nfolds=n_cv_folds, show_progressbar=True
+)
+
+import matplotlib.pyplot as plt
+
+# plot original lambda sequence
+plt.scatter(lambda_sequence, np.full(len(lambda_sequence), 1), color='black')
+
+# plot cross-validated lambdas
+plt.scatter(cMHN_lambda, 2, color='red')
+plt.scatter(oMHN_lambda, 3, color='blue')
+
+# labels
+plt.text(cMHN_lambda, 1.9, 'cMHN', ha='center')
+plt.text(oMHN_lambda, 2.9, 'oMHN', ha='center')
+
+# log scale
+plt.xscale('log')
+plt.yticks([])
+plt.ylabel('')
+plt.show()
+")
+
+# Obtener las secuencias de lambdas desde Python a R si necesitas usarlas
+lambda_sequence <- py$lambda_sequence
+cMHN_lambda <- py$cMHN_lambda
+oMHN_lambda <- py$oMHN_lambda
+```
+
+
+## Una vez calculada la lambda optima para cada modelo pasamos al entrenamiento
+
+```{r}
+
+py_run_string("
+# train cMHN
+cMHN_opt.train(lam=cMHN_lambda)
+# save output
+cMHN_opt.result.save(filename='cMHN.csv')
+
+# train oMHN
+oMHN_opt.train(lam=oMHN_lambda)
+# save output
+oMHN_opt.result.save(filename='oMHN.csv')
+
+import json
+import pprint
+
+with open('cMHN_meta.json') as f:
+    cMHN_log = json.load(f)
+
+pprint.pprint(cMHN_log)
+
+with open('oMHN_meta.json') as f:
+    oMHN_log = json.load(f)
+
+pprint.pprint(oMHN_log)
+")
+
+```
+
+## Visualizamos la matriz log-Theta de cada modelo
+
+```{r}
+# Gráfico cMHN
+py_run_string("import matplotlib.pyplot as plt")
+
+py_run_string("cMHN_opt.result.plot()")
+
+# Mostrar el gráfico generado
+py_run_string("plt.show()")
+```
+
+
+```{r}
+# Gráfico oMHN
+py_run_string("import matplotlib.pyplot as plt")
+
+py_run_string("oMHN_opt.result.plot()")
+
+# Mostrar el gráfico generado
+py_run_string("plt.show()")
+```
+
+## Simulación de datos artificiales a partir del modelo
+
+## Calidad del ajuste del cMHN y oMHN 
+
+```{r}
+
+py_run_string("
+
+# simulate 500 samples for cMHN
+cMHN_sim_observations = cMHN_opt.result.sample_artificial_data(
+    500, as_dataframe=True)
+print('cMHN simulations:')
+print (cMHN_sim_observations.head())
+
+
+# simulate 500 samples for oMHN
+oMHN_sim_observations = oMHN_opt.result.sample_artificial_data(
+    500, as_dataframe=True)
+print('oMHN simulations:')
+print (oMHN_sim_observations.head())
+")
+
+```
+## Prueba de Fisher para comprobar si se han recreado los patrones de co-ocurrencia en los datos de entrada
+```{r}
+
+py_run_string("
+
+from scipy.stats import fisher_exact
+
+# make the cross-table on input data
+input_crosstable = pd.crosstab(input_subset['STK11'], input_subset['KEAP1'])
+
+# print results
+print('Cross-table of STK11 and KEAP1 mutations in original data:')
+print(input_crosstable)
+
+# perform Fisher's exact test
+odds_ratio, p_value = fisher_exact(input_crosstable)
+
+# print results
+print('Fisher exact test:')
+print('Odds Ratio:', odds_ratio)
+print('p-value:', p_value)
+")
+
+```
+
+
+## Modelo cMHN
+
+```{r}
+py_run_string("
+# make the cross-table on cMHN data
+cMHN_crosstable = pd.crosstab(
+    cMHN_sim_observations['STK11'], cMHN_sim_observations['KEAP1'])
+
+# print results
+print('Cross-table of STK11 and KEAP1 mutations in data simulated from cMHN:')
+print(cMHN_crosstable)
+
+# perform Fisher's exact test
+odds_ratio, p_value = fisher_exact(cMHN_crosstable)
+
+# print results
+print('Fisher exact test:')
+print('Odds Ratio:', odds_ratio)
+print('p-value:', p_value)
+")
+```
+## Modelo oMHN
+
+```{r}
+py_run_string("
+# make the cross-table on oMHN data
+oMHN_crosstable = pd.crosstab(
+    oMHN_sim_observations['STK11'], oMHN_sim_observations['KEAP1'])
+
+# print results
+print('Cross-table of STK11 and KEAP1 mutations in data simulated from oMHN:')
+print(oMHN_crosstable)
+
+# perform Fisher's exact test
+odds_ratio, p_value = fisher_exact(oMHN_crosstable)
+
+# print results
+print('Fisher exact test:')
+print('Odds Ratio:', odds_ratio)
+print('p-value:', p_value)
+")
+```
+
+## Orden eventos
+
+## Modelo cMHN
+```{r}
+py_run_string("
+# simulate from cMHN
+c_trajectories, c_times = cMHN_opt.result.sample_trajectories(
+    100000, [], output_event_names=True)
+
+# condition on trajectories which contain KRAS and TP53
+indices = np.array([i for i, trajectory in enumerate(
+    c_trajectories) if 'KRAS' in trajectory and 'TP53' in trajectory])
+conditioned_trajectories = [c_trajectories[index] for index in indices]
+
+# of those, count in how many KRAS preceded TP53 and then get the fraction
+count_KRAS_first = sum(trajectory.index('KRAS') < trajectory.index(
+    'TP53') for trajectory in conditioned_trajectories)
+fraction_KRAS_first = count_KRAS_first / len(conditioned_trajectories)
+
+print('cMHN: simulation-derived P(KRAS before TP53 | KRAS, TP53 present):',
+      fraction_KRAS_first)
+")
+```
+
+
+## Modelo oMHN
+```{r}
+py_run_string("
+# simulate from cMHN
+o_trajectories, o_times = oMHN_opt.result.sample_trajectories(
+    100000, [], output_event_names=True)
+
+# condition on trajectories which contain KRAS and TP53
+indices = np.array([i for i, trajectory in enumerate(
+    o_trajectories) if 'KRAS' in trajectory and 'TP53' in trajectory])
+conditioned_trajectories = [o_trajectories[index] for index in indices]
+
+# of those, count in how many KRAS preceded TP53 and then get the fraction
+count_KRAS_first = sum(trajectory.index('KRAS') < trajectory.index(
+    'TP53') for trajectory in conditioned_trajectories)
+fraction_KRAS_first = count_KRAS_first / len(conditioned_trajectories)
+
+print('oMHN: simulation-derived P(KRAS before TP53 | KRAS, TP53 present):',
+      fraction_KRAS_first)
+")
+```
+
+## Predecir el siguiente evento dado un estado concreto
+
+## Modelo cMHN
+
+```{r}
+py_run_string("
+print(input_subset.columns)
+
+# specify state of interest
+state_of_interest = np.array(
+    [0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0], dtype=np.int32)
+
+# get the cMHN predictions
+cMHN_predictions = cMHN_opt.result.compute_next_event_probs(
+    state_of_interest, as_dataframe=True)
+
+# show
+print('cMHN predictions:')
+print(cMHN_predictions)
+
+# get the cMHN predictions, this time with possible observation
+cMHN_predictions = cMHN_opt.result.compute_next_event_probs(
+    state_of_interest, as_dataframe=True, allow_observation=True)
+
+# show
+print('cMHN predictions w/ observation:')
+print(cMHN_predictions)
+")
+```
+
+
+## Modelo oMHN
+
+```{r}
+py_run_string("
+# get the oMHN predictions
+oMHN_predictions = oMHN_opt.result.compute_next_event_probs(
+    state_of_interest, as_dataframe=True)
+
+# show
+print('oMHN predictions:')
+print(oMHN_predictions)
+
+# get the cMHN predictions, this time with possible observation
+oMHN_predictions = oMHN_opt.result.compute_next_event_probs(
+    state_of_interest, as_dataframe=True, allow_observation=True)
+
+# show
+print('oMHN predictions w/ observation:')
+print(oMHN_predictions)
+
+")
+```
