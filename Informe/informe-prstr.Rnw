@@ -34,7 +34,11 @@ opts_knit$set(stop_on_error = 2L)
 %\cite{Schill2024} -> Correcting for Observation Bias in Cancer Progression Modeling
 %\cite{DiazUriarte2019} -> Every which way? On predicting tumor evolution using cancer progression models
 %\cite{DiazColunga2021} -> Conditional prediction of consecutive tumor evolution using cancer progression models
+%\cite{DiazUriarte2022} -> EvAM-Tools: tools for evolutionary accumulation and cancer progression models
 %\cite{EvamtoolsMethods} -> EvAM-Tools Methods' and FAQ
+%\cite{EvamtoolsHelp} -> Package evamtools
+%\cite{EvamtoolsExamples} -> EvAM-Tools examples
+%\cite{EvamtoolsOncoSimulR} -> Using OncoSimulR to get accessible genotypes and transition matrices
 
 \section{Introducción a Mutual Hazard Networks}
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
