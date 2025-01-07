@@ -9,7 +9,7 @@
 \usepackage{listing}
 \usepackage{color}
 \usepackage{tabularx}
-\usepackage[sorting=none, url=false, backend=bibtex]{biblatex}
+\usepackage[sorting=none, backend=bibtex]{biblatex}
 \addbibresource{bibliography.bib}
 
 \newcommand{\code}[1]{\texttt{#1}}
@@ -39,6 +39,7 @@ opts_knit$set(stop_on_error = 2L)
 %\cite{EvamtoolsHelp} -> Package evamtools
 %\cite{EvamtoolsExamples} -> EvAM-Tools examples
 %\cite{EvamtoolsOncoSimulR} -> Using OncoSimulR to get accessible genotypes and transition matrices
+%\cite{mhnPython} -> mhn: A Python Package to efficiently compute Mutual Hazard Networks
 
 \section{Introducción a Mutual Hazard Networks}
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
@@ -60,7 +61,7 @@ El nuevo modelo oMHN incorpora explícitamente el evento de observación en la r
 
 Estos modelos trabajan con datos transversales, es decir, diferentes sujetos son tomados en tiempos diferentes (independientes). Estos datos se recogen en una matriz binaria en la cual las filas representan pacientes o sujetos y las columnas genes/SNPs/etc. Cada celda puede contener un 1 si el evento, alteración o mutación está presente o un 0 si no fue observado \cite{EvamtoolsMethods}. Algunos modelos pueden trabajar también con datos filogenéticos o datos longitudinales.
 
-%Sotfware utilizados: EvaMTools versión página web, paquete R, paquete Python (mhn)
+Para este trabajo se han utilizado los siguientes softwares: módulo \code{mhn} en Python \cite{mhnPython}, la página web de \code{evamtools} y la propia librería de \code{evamtools} en R \cite{EvamtoolsMethods, EvamtoolsHelp, EvamtoolsExamples, EvamtoolsOncoSimulR}.
 
 \section{Comparación de implementaciones entre R y Python}
 
@@ -381,13 +382,14 @@ Learn.Indep.Omega <- function(pD, Omega){
 }
 @
 
-La función \code{Build.Q.Extended} dLa matriz extendida \( \bar{Q} \) tiene dimensiones \( 2^{n+1} \times 2^{n+1} \), donde \( n \) es el número de eventos de progresión genética. Está dividida en cuatro bloques principales:
+La función \code{Build.Q.Extended} genera la matriz extendida $\bar{Q}$, con dimensiones $2^{n+1} \times 2^{n+1}$, donde $n$ es el número de eventos de progresión genética. Está dividida en cuatro bloques principales:
+\begin{itemize}
+\item \textbf{$T$}: De dimensiones $2^n \times 2^n$, modela las transiciones antes de la observación.
+\item \textbf{$U$}: De dimensiones $2^n \times 2^n $, conecta los estados antes de la observación ($A$) con los estados después de la observación ($B$).
+\item \textbf{Dos bloques de ceros ($0$)}: Indican que no hay transiciones desde $B$ ni dentro de $B$ tras la observación.
+\end{itemize}
 
-- **\( T \)**: De dimensiones \( 2^n \times 2^n \), modela las transiciones antes de la observación.
-- **\( U \)**: De dimensiones \( 2^n \times 2^n \), conecta los estados antes de la observación (\( A \)) con los estados después de la observación (\( B \)).
-- **Dos bloques de ceros (\( 0 \))**: Indican que no hay transiciones desde \( B \) ni dentro de \( B \) tras la observación.
-
-La matriz tiene una estructura triangular, con \( T \) en la diagonal superior izquierda y \( U \) en la parte inferior izquierda, mientras que las columnas de \( \bar{Q} \) están normalizadas para que cada una sume 0.
+La matriz tiene una estructura triangular, con $T$ en la diagonal superior izquierda y $U$ en la parte inferior izquierda, mientras que las columnas de $\bar{Q}$ están normalizadas para que cada una sume 0.
 
 
 <<>>=
