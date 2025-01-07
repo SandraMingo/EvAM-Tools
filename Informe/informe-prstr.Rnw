@@ -61,7 +61,7 @@ El nuevo modelo oMHN incorpora explícitamente el evento de observación en la r
 
 Estos modelos trabajan con datos transversales, es decir, diferentes sujetos son tomados en tiempos diferentes (independientes). Estos datos se recogen en una matriz binaria en la cual las filas representan pacientes o sujetos y las columnas genes/SNPs/etc. Cada celda puede contener un 1 si el evento, alteración o mutación está presente o un 0 si no fue observado \cite{EvamtoolsMethods}. Algunos modelos pueden trabajar también con datos filogenéticos o datos longitudinales.
 
-Para este trabajo se han utilizado los siguientes softwares: módulo \code{mhn} en Python \cite{mhnPython}, la página web de \code{evamtools} y la propia librería de \code{evamtools} en R \cite{EvamtoolsMethods, EvamtoolsHelp, EvamtoolsExamples, EvamtoolsOncoSimulR}.
+Para este trabajo se han utilizado los siguientes softwares: módulo \code{mhn v1.0.0} en Python \cite{mhnPython}, la página web de \code{evamtools v2.1.16} y la propia librería de \code{evamtools v2.1.16} en R \cite{EvamtoolsMethods, EvamtoolsHelp, EvamtoolsExamples, EvamtoolsOncoSimulR}.
 
 \section{Comparación de implementaciones entre R y Python}
 
