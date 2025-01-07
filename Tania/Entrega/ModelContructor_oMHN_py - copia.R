@@ -120,3 +120,10 @@ Q_matrix <- Build.Q.Extended(omega_Theta)
 
 # Ver la matriz resultante Q
 print(Q_matrix)
+
+
+#### TEST
+Theta <- Random.Theta(3)
+omega_Theta <- Random.Theta.Omega(3)
+
+Q_extended <- Build.Q.Extended (omega_Theta)
