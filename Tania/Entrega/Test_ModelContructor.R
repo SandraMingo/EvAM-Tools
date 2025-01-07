@@ -38,11 +38,12 @@ test_random_theta_omega()
 Q.Subdiag(Theta, i = 2)
 
 # Build.Q fuction:
-Build.Q(Theta)
+Q <- Build.Q(Theta)
+all.equal(colSums(as.matrix(Q)), rep(0, ncol(Q)))
 
 # Build.Q.Extended fuction:
-Build.Q.Extended(Theta, Omega)
-
+Q_extended <-Build.Q.Extended(Theta, Omega)
+all.equal(colSums(as.matrix(Q_extended)), rep(0, ncol(Q_extended)))
 
 # Q.Diag fuction:
 Q.Diag(Theta)

@@ -257,7 +257,7 @@ Tras ello, se comprueba que, efectivamente, el resultado es el mismo con ambas h
 
 %Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
 
-Para llevar a cabo la implementación de la coreeción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donode se podrían insertar la lógica de correción, además de consultar el código del módulo \code{mhn}, donde ya está presente esta correción del sesgo.
+Para llevar a cabo la implementación de la correción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donode se podrían insertar la lógica de correción, además de consultar el código del módulo \code{mhn}, donde ya está presente esta correción del sesgo.
 
 Dentro de \code{evamtools}, existen varios ficheros potenciales donde incluir esta correción del sesgo:
 \begin{enumerate}
@@ -381,6 +381,14 @@ Learn.Indep.Omega <- function(pD, Omega){
 }
 @
 
+La función \code{Build.Q.Extended} dLa matriz extendida \( \bar{Q} \) tiene dimensiones \( 2^{n+1} \times 2^{n+1} \), donde \( n \) es el número de eventos de progresión genética. Está dividida en cuatro bloques principales:
+
+- **\( T \)**: De dimensiones \( 2^n \times 2^n \), modela las transiciones antes de la observación.
+- **\( U \)**: De dimensiones \( 2^n \times 2^n \), conecta los estados antes de la observación (\( A \)) con los estados después de la observación (\( B \)).
+- **Dos bloques de ceros (\( 0 \))**: Indican que no hay transiciones desde \( B \) ni dentro de \( B \) tras la observación.
+
+La matriz tiene una estructura triangular, con \( T \) en la diagonal superior izquierda y \( U \) en la parte inferior izquierda, mientras que las columnas de \( \bar{Q} \) están normalizadas para que cada una sume 0.
+
 
 <<>>=
 # Para calcular la stationary distribution
@@ -397,6 +405,10 @@ Stationary.Distribution <- function(Theta, Omega, p0){
 }
 
 @
+
+Mdificaciones adicionales deben llevarse a cabo en los ficheros \code{MHN\_\_RegularizedOptimization.R} y \code{MHN\_\_ModelConstruction.R} para la correcta consideración del parámetro omega introducido.
+
+Otra aproximación sería, en lugar la de la contrucción de la matriz Q extendida como una matriz 
 
 
 \printbibliography

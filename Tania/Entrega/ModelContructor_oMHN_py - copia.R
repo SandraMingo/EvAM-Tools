@@ -26,7 +26,6 @@ Random.Theta.Omega <- function(n, sparsity = 0) {
   return(round(omega_Theta, 2))
 }
 
-#Random.Theta.Omega(4)
 
 Remove.Last.Row <- function(matrix) {
   # Elimina la última fila de la matriz
