@@ -258,7 +258,7 @@ Tras ello, se comprueba que, efectivamente, el resultado es el mismo con ambas h
 
 %Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
 
-Para llevar a cabo la implementación de la correción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donde se podría insertar la lógica de correción, además de consultar el código del módulo \code{mhn}, donde ya está presente esta correción del sesgo.
+Para llevar a cabo la implementación de la correción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donde se podría insertar la lógica de corrección, además de consultar el código del módulo \code{mhn}, donde ya está presente esta corrección del sesgo.
 
 Dentro de \code{evamtools}, existen varios ficheros potenciales en los que incluirla:
 \begin{itemize}
@@ -267,7 +267,7 @@ Dentro de \code{evamtools}, existen varios ficheros potenciales en los que inclu
 \item \code{MHN\_\_RegularizedOptimization.R}: En este archivo se maneja el proceso de optimización para el ajuste del modelo. Es necesario ajustar el procedimiento de optimización del parámetro $\Omega$ añadido.
 \end{itemize}
 
-También podemos encontrar otro ficheros como \code{MHN\_\_ExampleApplications.R}, \code{MHN\_\_InlineFunctions.R}, \code{MHN\_\_UtilityFunctions.R}, que podrían ser actualizados, por ejemplo, para mostrar el uso del modelo de correción de sesgo. No obstante, para ello habría que modificar previamente los ficheros enumerados anteriormente, centrándonos en éstos para el presente trabajo.
+También podemos encontrar otro ficheros como \code{MHN\_\_ExampleApplications.R}, \code{MHN\_\_InlineFunctions.R} y \code{MHN\_\_UtilityFunctions.R}, que podrían ser actualizados, por ejemplo, para mostrar el uso del modelo de corrección de sesgo. No obstante, para ello habría que modificar previamente los ficheros enumerados anteriormente, centrándonos en éstos para el presente trabajo.
 
 Para implementar la corrección por sesgo, tenemos que ajustar las funciones que construyen las matrices de tasas de transición, las distribuciones estacionarias y la función de verosimilitud.
 
@@ -383,9 +383,9 @@ La función \code{Build.Q.Extended} genera la matriz extendida $\bar{Q}$, con di
 
 La matriz tiene una estructura triangular, con $T$ en la diagonal superior izquierda y $U$ en la parte inferior izquierda. %mientras que las columnas de $\bar{Q}$ están normalizadas para que cada una sume 0.
 
-Además, sería  necesario la modificacion de la distribución estacionaria ya que la observación del tumor es en un momento específico y bajo cientas condiciones de forma que los estados de los tumores no están distribuidos uniformemente en el tiempo.
-<<>>=
+Además, sería  necesario la modificación de la distribución estacionaria, ya que la observación del tumor es en un momento específico y bajo ciertas condiciones, de forma que los estados de los tumores no están distribuidos uniformemente en el tiempo.
 
+<<>>=
 Stationary.Distribution <- function(Theta, Omega, p0){
   n <- nrow(Theta)
   Q <- Build.Q(Theta)
@@ -404,12 +404,12 @@ Stationary.Distribution <- function(Theta, Omega, p0){
 
 Al introducir el parámetro $\Omega$ en el cálculo de la distribución estacionaria, se considera tanto las transiciones de los eventos como los efectos de la observación.
 
-Por último, también sería necesario la modificación de la función de log-verosimilitud teniendo en cuenta la distribución estacionaria corregida que descrita anteriormente.
+Por último, también sería necesario la modificación de la función de log-verosimilitud teniendo en cuenta la distribución estacionaria corregida descrita anteriormente.
 
-Respecto a la función Build.Q.Extendida, las dimensiones de la matriz generada son las correctas a partir de los parámetros introducidos. No obstante, debe haber un fallo en el cálculo de la matriz U, ya que la suma de las columnas no da cero, lo cual es un requisito esencial en los modelos de Markov continuo. Esto indica que puede haber un fallo en el cálculo de la matriz de tasas de transición, comprometiendo la validez del modelo y siendo necesario la revisión del código. Confirmada la correcta creación de la matriz de transición, se podría revisar el código de la función del cálculo de la distribución estacionaria e implementar la función de log-verosimilitud. 
+Respecto a la función Build.Q.Extendida, las dimensiones de la matriz generada son las correctas a partir de los parámetros introducidos. No obstante, debe haber un fallo en el cálculo de la matriz U, ya que la suma de las columnas no da cero, lo cual es un requisito esencial en los modelos de Markov continuo. Esto indica que puede haber un fallo en el cálculo de la matriz de tasas de transición, comprometiendo la validez del modelo y siendo necesaria la revisión del código. Confirmada la correcta creación de la matriz de transición, se podría revisar el código de la función del cálculo de la distribución estacionaria e implementar la función de log-verosimilitud. 
 
 
-Otra aproximación sería, en lugar la de la contrucción de la matriz Q extendida como una matriz de dimensiones $2^{n+1} \times 2^{n+1}$, representarla como una matriz de dimensiones $2^{n} \times 2^{n}$ a la que se le añadiría una fila adicional con el evento de observación. Esto último es como se implementa en el módulo de Python \code{mhn}.
+Otra aproximación sería, en lugar la de la construcción de la matriz Q extendida como una matriz de dimensiones $2^{n+1} \times 2^{n+1}$, representarla como una matriz de dimensiones $2^{n} \times 2^{n}$ a la que se le añadiría una fila adicional con el evento de observación. Esto último es como se implementa en el módulo de Python \code{mhn}.
 
 A continuación se muestra está implementación: 
 <<>>=
@@ -488,28 +488,34 @@ Q.Diag <- function(omega_Theta) {
 }
 @
 
-Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo esta incializada con ceros. Posteriormetes, sería necesaria su implementación para obtener los valores correspondientes.
+Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo ésta inicializada con ceros. Posteriormente, sería necesaria su implementación para obtener los valores correspondientes.
 
 <<>>=
 # Generar omega_Theta
 omega_Theta <- Random.Theta.Omega(n = 2, sparsity = 0.3)
 Theta <- Remove.Last.Row(omega_Theta)
 
-# Construir la matriz Q
+# Construir la matriz Q y verla
 Q_matrix <- Build.Q.Extended(omega_Theta)
-
-# Ver la matriz resultante Q
 print(Q_matrix)
 
 #### TEST
 Theta <- Random.Theta(3)
 omega_Theta <- Random.Theta.Omega(3)
-
 Q_extended <- Build.Q.Extended (omega_Theta)
-
-}
+print(Q_extended)
 @
 
+\section{Conclusiones y perspectivas a futuro}
+Este trabajo ha permitido explorar en profundidad el uso de modelos MHN en el contexto de la progresión del cáncer, así como sus implementaciones en Python y R. Las principales conclusiones obtenidas son las siguientes:
+\begin{enumerate}
+\item \textbf{Importancia de la corrección del sesgo por observación:} La implementación del modelo oMHN corrige el sesgo de observación, mejorando la interpretabilidad de los parámetros inferidos y permitiendo un modelado más realista. Sin embargo, esta mejora tiene un costo computacional, ya que requiere recursos adicionales en comparación con el modelo clásico (cMHN).
+\item \textbf{Comparación de herramientas:} Las herramientas analizadas (módulo \code{mhn} en Python y \code{evamtools} en R) presentan fortalezas y debilidades complementarias. Mientras que \code{mhn} ofrece la única implementación del modelo oMHN, \code{evamtools} destaca por su versatilidad al incluir varios modelos CPM. Además, la implementación en Python tiene la ventaja de utilizar CUDA para acelerar cálculos, aunque esto limita su compatibilidad a versiones específicas.
+\item \textbf{Desafíos en la integración y visualización:} La integración de herramientas entre lenguajes, aunque prometedora, enfrenta desafíos técnicos, como la transferencia de datos y la compatibilidad de resultados. Además, se observó que la visualización directa en herramientas como la aplicación web de \code{evamtools} puede ser limitada, requiriendo análisis adicionales en un entorno más robusto como R.
+\item \textbf{Áreas de mejora:} A pesar de los avances, queda margen para optimizar tanto el tiempo de ejecución como la robustez de las herramientas, especialmente en datasets pequeños. También sería valioso extender la implementación de oMHN a \code{evamtools}, ofreciendo así una opción más completa para el análisis de datos genéticos. En este trabajo hemos probado dos aproximaciones para la inclusión de la corrección del sesgo en el modelo, esperando que sirva para futuras actualizaciones de la librería.
+\end{enumerate}
+
+En conclusión, este análisis refuerza la utilidad de MHN como herramienta en la investigación oncológica y filogenética y sugiere que la combinación de las capacidades de Python y R puede proporcionar un entorno potente y flexible para futuros desarrollos y aplicaciones en este campo. 
 
 \printbibliography
 
