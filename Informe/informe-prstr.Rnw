@@ -488,7 +488,7 @@ Q.Diag <- function(omega_Theta) {
 }
 @
 
-Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo esta incializada con ceros. Posteriormentes, sería necesaria su implementación para obtener los valores correspondientes.
+Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo esta incializada con ceros. Posteriormetes, sería necesaria su implementación para obtener los valores correspondientes.
 
 <<>>=
 # Generar omega_Theta
