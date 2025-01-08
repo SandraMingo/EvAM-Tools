@@ -33,7 +33,7 @@ Q.Subdiag <- function(Theta, i){
   n <- length(row)
   
   s <- exp(row[i])
-  .
+  
   for(j in 1:n){
     s <- c(s, s * exp(row[j]) * (i != j))
   }
