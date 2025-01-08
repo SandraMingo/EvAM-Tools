@@ -258,7 +258,7 @@ Tras ello, se comprueba que, efectivamente, el resultado es el mismo con ambas h
 
 %Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
 
-Para llevar a cabo la implementación de la correción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donde se podrían insertar la lógica de correción, además de consultar el código del módulo \code{mhn}, donde ya está presente esta correción del sesgo.
+Para llevar a cabo la implementación de la correción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donde se podría insertar la lógica de correción, además de consultar el código del módulo \code{mhn}, donde ya está presente esta correción del sesgo.
 
 Dentro de \code{evamtools}, existen varios ficheros potenciales en los que incluirla:
 \begin{itemize}
