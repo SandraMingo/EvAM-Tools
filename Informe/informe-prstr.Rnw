@@ -499,11 +499,6 @@ Theta <- Remove.Last.Row(omega_Theta)
 Q_matrix <- Build.Q.Extended(omega_Theta)
 print(Q_matrix)
 
-#### TEST
-Theta <- Random.Theta(3)
-omega_Theta <- Random.Theta.Omega(3)
-Q_extended <- Build.Q.Extended (omega_Theta)
-print(Q_extended)
 @
 
 \section{Conclusiones y perspectivas a futuro}
