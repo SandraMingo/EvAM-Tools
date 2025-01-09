@@ -32,7 +32,7 @@ Ejemplos adicionales se pueden encontrar en este directorio:
 
 ### Cargar datos de un CSV:
 ```{r}
-data <- read.csv("tinydata.csv")
+data <- read.csv("../Datos/tinydata.csv")
 ```
 
 # Introducir frecuencias de genotipos manualmente:
@@ -295,11 +295,6 @@ plot_evam(
 # dev.off()
 
 ```
-
-```{r}
-
-```
-
 
 ### Generación de Muestras Aleatorias
 Generamos datos simulados a partir del modelo entrenado para explorar las transiciones de genotipos observados.
