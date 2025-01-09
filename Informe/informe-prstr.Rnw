@@ -512,7 +512,7 @@ Este trabajo ha permitido explorar en profundidad el uso de modelos MHN en el co
 
 En conclusión, este análisis refuerza la utilidad de MHN como herramienta en la investigación oncológica y filogenética y sugiere que la combinación de las capacidades de Python y R puede proporcionar un entorno potente y flexible para futuros desarrollos y aplicaciones en este campo. 
 
-\printbibliography
+\printbibliography[heading=subbibintoc]
 
 
 \end{document}
