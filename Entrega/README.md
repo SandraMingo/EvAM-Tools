@@ -14,8 +14,9 @@ Se aporta:
 	- LUAD_500.csv
 	- LUAD_n12.csv
 - Carpeta Ficheros:
+	- Evamtools.Rmd: pruebas realizadas con la librería evamtools y varias visualizaciones
 	- ModelContructor_oMHN_def.R: implementación de oMHN en evamtools utilizando la teoría matemática del artículo de Schill,2024
 	- ModelContructor_oMHN_py.R: implementación de oMHN en evamtools utilizando como inspiración la implementación que hay en el módulo mhn de Python
-	- Reticulate_demo_def.Rmd: uso del paquete de Reticulate de R para combinar y correr el código de Python del paquete mhn.
+	- Reticulate_demo_def.Rmd: uso del paquete de Reticulate de R para combinar y correr el código de Python del paquete mhn
+	- Shiny_web.Rmd: funciones de la web shiny pero en un script de R
 	- Test_ModelContructor.R: pruebas realizadas para probar ModelContructor_oMHN_def.R
-	- Evamtools.Rmd: pruebas realizadas con la librería evamtools y varias visualizaciones
