@@ -5,6 +5,7 @@ En este trabajo hemos analizado las herramientas disponibles en Python y R para 
 Se aporta:
 - Carpeta Informe:
 	- Fichero .Rnw con el informe redactado
+	- Fichero .bib con la bibliografía utilizada 
 	- PDF compilado
 	- Carpeta config con el estilo del Rnw para la compilación del PDF
 - Carpeta Datos:
