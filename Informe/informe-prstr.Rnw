@@ -381,7 +381,7 @@ La función \code{Build.Q.Extended} genera la matriz extendida $\bar{Q}$, con di
 \item \textbf{Dos bloques de ceros ($0$)}: Indican que no hay transiciones desde $B$ ni dentro de $B$ tras la observación.
 \end{itemize}
 
-La matriz tiene una estructura triangular, con $T$ en la diagonal superior izquierda y $U$ en la parte inferior izquierda. %mientras que las columnas de $\bar{Q}$ están normalizadas para que cada una sume 0.
+La matriz tiene una estructura triangular, con $T$ en la diagonal superior izquierda y $U$ en la parte inferior izquierda. Las columnas de $\bar{Q}$ están normalizadas para que cada una sume 0.
 
 Además, sería  necesario la modificación de la distribución estacionaria, ya que la observación del tumor es en un momento específico y bajo ciertas condiciones, de forma que los estados de los tumores no están distribuidos uniformemente en el tiempo.
 
@@ -406,8 +406,7 @@ Al introducir el parámetro $\Omega$ en el cálculo de la distribución estacion
 
 Por último, también sería necesario la modificación de la función de log-verosimilitud teniendo en cuenta la distribución estacionaria corregida descrita anteriormente.
 
-Respecto a la función Build.Q.Extendida, las dimensiones de la matriz generada son las correctas a partir de los parámetros introducidos. No obstante, debe haber un fallo en el cálculo de la matriz U, ya que la suma de las columnas no da cero, lo cual es un requisito esencial en los modelos de Markov continuo. Esto indica que puede haber un fallo en el cálculo de la matriz de tasas de transición, comprometiendo la validez del modelo y siendo necesaria la revisión del código. Confirmada la correcta creación de la matriz de transición, se podría revisar el código de la función del cálculo de la distribución estacionaria e implementar la función de log-verosimilitud. 
-
+Respecto a la función Build.Q.Extendida, las dimensiones de la matriz generada son las correctas a partir de los parámetros introducidos. Además, se ha comprobado que la suma de las columnas sea cero, requisito esencial es los modelos continuos de Markov. Esto sugiere que la implementación de la función Build.Q.Extended a partir de Build.Q para generar la matriz Q extendida es correcta.
 
 Otra aproximación sería, en lugar la de la construcción de la matriz Q extendida como una matriz de dimensiones $2^{n+1} \times 2^{n+1}$, representarla como una matriz de dimensiones $2^{n} \times 2^{n}$ a la que se le añadiría una fila adicional con el evento de observación. Esto último es como se implementa en el módulo de Python \code{mhn}.
 
@@ -450,31 +449,26 @@ Q.Subdiag <- function(Theta, i){
 }
 
 Remove.Last.Row <- function(matrix) {
-  # Elimina la última fila de la matriz
   return(matrix[1:(nrow(matrix) - 1), ])
 }
 
-Build.Q.Extended <- function(Theta, Omega) {
+Build.Q.Extended <- function(omega_Theta){
+  extra_row <- omega_Theta[nrow(omega_Theta), ]
+  
   n <- nrow(Theta)
-  Q <- Build.Q(Theta)
   
-  states <- matrix(rep(0:(2^n - 1), each = n), ncol = n)
-  states <- t(apply(states, 1, function(x) as.integer(intToBits(x)[1:n])))
+  Subdiags <- c()
+  for(i in 1:n){
+    Subdiags <- cbind(Subdiags, Q.Subdiag(Theta, i))
+  }
   
-  omega_products <- apply(states, 1, function(state) prod(Omega[which(state == 1)]))
+  Q <- Matrix::bandSparse(2^n, k = -2^(0 : (n-1)), diagonals=Subdiags)
+
+  diag(Q) <- -Matrix::colSums(Q)
   
-  U <- Matrix(0, nrow = 2^n, ncol = 2^n)
-  U[cbind(1:(2^n), 1:(2^n))] <- omega_products
+  Q_extended <- Matrix::bdiag(Q, extra_row)
   
-  T <- Q - U
-  
-  Q_bar <- Matrix(0, nrow = 2^(n+1), ncol = 2^(n+1))
-  
-  # Llenar las submatrices
-  Q_bar[1:2^n, 1:2^n] <- T               
-  Q_bar[(2^n+1):(2^(n+1)), 1:2^n] <- U   
-  
-  return(Q_bar)
+  return(Q_extended)
 }
 
 
@@ -492,7 +486,7 @@ Q.Diag <- function(omega_Theta) {
 }
 @
 
-Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo ésta inicializada con ceros. Posteriormente, sería necesaria su implementación para obtener los valores correspondientes.
+Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo ésta inicializada con ceros. Posteriormente, sería necesaria su implementación para obtener los valores correspondientes. Así, nos podríamos basar en la implementación realizada en Build.Q.Extended, pero en lugar de generar la matriz Q extendida con los 4 bloques, la diagonal generada (Omega_products) se podría añadir como fila adicional. Posteriormente se podría proceder como en el módulo de Python \code{mhn}.
 
 <<>>=
 # Generar omega_Theta
