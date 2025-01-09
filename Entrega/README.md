@@ -4,10 +4,11 @@ En este trabajo hemos analizado las herramientas disponibles en Python y R para 
 
 Se aporta:
 - Carpeta Informe:
-	- Fichero .Rnw con el informe redactado
-	- Fichero .bib con la bibliografía utilizada 
-	- PDF compilado
+	- informe-prstr.Rnw con el informe redactado
+	- bibliography.bib con la bibliografía utilizada 
+	- informe-prstr.pdf PDF compilado
 	- Carpeta config con el estilo del Rnw para la compilación del PDF
+	- Presentacion.pdf Presentación utilizada para exponer el trabajo
 - Carpeta Datos:
 	- tinydata.csv
 	- BRCA_ba_s.csv
