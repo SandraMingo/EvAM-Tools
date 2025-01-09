@@ -55,7 +55,6 @@ Build.Q <- function(Theta){
 
 
 #########
-
 Build.Q.Extended <- function(omega_Theta) {
   # Calcula el número de estados n
   n <- nrow(Theta)
