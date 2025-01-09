@@ -486,7 +486,7 @@ Q.Diag <- function(omega_Theta) {
 }
 @
 
-Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo ésta inicializada con ceros. Posteriormente, sería necesaria su implementación para obtener los valores correspondientes. Así, nos podríamos basar en la implementación realizada en Build.Q.Extended, pero en lugar de generar la matriz Q extendida con los 4 bloques, la diagonal generada (Omega_products) se podría añadir como fila adicional. Posteriormente se podría proceder como en el módulo de Python \code{mhn}.
+Con una simulación, podemos comprobar que inicializamos una matriz Q, con una fila adicional, siendo ésta inicializada con ceros. Posteriormente, sería necesaria su implementación para obtener los valores correspondientes. Así, nos podríamos basar en la implementación realizada en Build.Q.Extended, pero en lugar de generar la matriz Q extendida con los 4 bloques, la diagonal generada (Omega\_products) se podría añadir como fila adicional. Posteriormente se podría proceder como en el módulo de Python \code{mhn}.
 
 <<>>=
 # Generar omega_Theta
