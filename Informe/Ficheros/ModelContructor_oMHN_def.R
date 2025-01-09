@@ -55,35 +55,34 @@ Build.Q <- function(Theta){
 
 
 #########
-Build.Q.Extended <- function(omega_Theta) {
-  # Calcula el número de estados n
+Build.Q.Extended <- function(Theta, Omega) {
   n <- nrow(Theta)
+  Q <- Build.Q(Theta)
   
-  # Construcción de la matriz Q utilizando las subdiagonales
-  Subdiags <- c()
-  for (i in 1:n) {
-    Subdiags <- cbind(Subdiags, Q.Subdiag(Theta, i))
-  }
-  
-  Q <- Matrix::bandSparse(2^n, k = -2^(0:(n-1)), diagonals = Subdiags)
-  
-  # Configura la diagonal principal como la suma negativa de las columnas
-  diag(Q) <- -Matrix::colSums(Q)
-  
-  # Calcula omega_products para las combinaciones de estados
+  # Crear una matriz binaria que representa todos los estados posibles (2^n filas, n columnas)
   states <- matrix(rep(0:(2^n - 1), each = n), ncol = n)
-  states <- t(apply(states, 1, function(x) as.integer(intToBits(x)[1:n])))
+  states <- t(apply(states, 1, function(x) as.integer(intToBits(x)[1:n])))  # Binario en forma de matriz
   
+  # Vector de productos Omega, cada fila corresponderá a un estado
   omega_products <- apply(states, 1, function(state) prod(Omega[which(state == 1)]))
   
-  # Añade omega_products como última fila en Q
-  Q_extended <- Matrix(0, nrow = 2^n + 1, ncol = 2^n) # Nueva matriz extendida
-  Q_extended[1:2^n, ] <- Q                          # Copia Q en las primeras filas
-  Q_extended[2^n + 1, ] <- omega_products           # Añade omega_products como última fila
+  # Crear la matriz U de manera eficiente
+  U <- Matrix(0, nrow = 2^n, ncol = 2^n)
+  U[cbind(1:(2^n), 1:(2^n))] <- omega_products  # Asignar los productos en la diagonal
   
-  return(Q_extended)
+  # Calcular T
+  T <- Q - U
+  
+  # Crear la matriz Q_bar de tamaño 2^(n+1) x 2^(n+1)
+  Q_bar <- Matrix(0, nrow = 2^(n+1), ncol = 2^(n+1))
+  
+  # Llenar las submatrices
+  Q_bar[1:2^n, 1:2^n] <- T               # T en la parte superior izquierda
+  Q_bar[(2^n+1):(2^(n+1)), 1:2^n] <- U   # U en la parte inferior izquierda
+  
+  # Retornar la matriz extendida
+  return(Q_bar)
 }
-
 
 ########
 
