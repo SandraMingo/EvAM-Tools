@@ -27,25 +27,10 @@ opts_knit$set(stop_on_error = 2L)
 
 \newpage 
 
-%%%%CITAS
-%\cite{PictureGuide} -> A picture guide to cancer progression and monotonic accumulation models: evolutionary assumptions,  plausible interpretations,  and alternative uses
-%\cite{ModellingCancerProgression} -> Modelling cancer progression using Mutual Hazard Network
-%\cite{OvercomingObservationBias} -> Overcoming Observation Bias for Cancer Progression Modeling
-%\cite{Schill2024} -> Correcting for Observation Bias in Cancer Progression Modeling
-%\cite{DiazUriarte2019} -> Every which way? On predicting tumor evolution using cancer progression models
-%\cite{DiazColunga2021} -> Conditional prediction of consecutive tumor evolution using cancer progression models
-%\cite{DiazUriarte2022} -> EvAM-Tools: tools for evolutionary accumulation and cancer progression models
-%\cite{EvamtoolsMethods} -> EvAM-Tools Methods' and FAQ
-%\cite{EvamtoolsHelp} -> Package evamtools
-%\cite{EvamtoolsExamples} -> EvAM-Tools examples
-%\cite{EvamtoolsOncoSimulR} -> Using OncoSimulR to get accessible genotypes and transition matrices
-%\cite{mhnPython} -> mhn: A Python Package to efficiently compute Mutual Hazard Networks
-
 \section{Introducción a Mutual Hazard Networks}
 Los modelos de progresión en cáncer (CPM) son métodos utilizados para predecir los futuros estados de un sistema y entender las restricciones en el orden de los eventos acumulados durante la progresión del tumor \cite{PictureGuide}. 
 
 Entre esos modelos se encuentran los Mutual Hazard Networks (MHN), algoritmos de aprendizaje automático. Modelan la tasa de aparición de un suceso, como puede ser una mutación, mediante una tasa espontánea de adquisición y un evento multiplicativo que cada uno de estos sucesos puede tener sobre la tasa de otros sucesos mediante interacciones por pares que modelan dependencias promotoras e inhibidoras \cite{ModellingCancerProgression}. Eso representa la principal diferencia con los demás modelos de CPM; en MHN, los eventos no son determinísticos, si no que pueden afectar a la probabilidad de aparición de otros. Este modelo cuenta con una serie de supuestos: se sufre una acumulación de eventos irreversible, las muestras son independientes y los datos son homogéneos. 
-%Las suponisciones del modelo son acumulación irreversibles, independiencia de las muestras y homogeinicidad de los datos. 
 Además, el momento en que se produce una observación (por ejemplo, un diagnóstico de cáncer) es independiente de los acontecimientos precedentes. En su lugar, se supone que los tiempos de observación siguen una distribución exponencial simple, que es un supuesto estadístico estándar que a menudo se hace por simplicidad. 
 
 No obstante, los MHN se han modificado recientemente para corregir el sesgo por observación \cite{Schill2024}. En este nuevo enfoque, el acto de observar un acontecimiento se considera parte del proceso que se está modelando, lo que implica que el momento de una observación depende de los eventos que hayan ocurrido previamente. Por ejemplo, una acumulación más agresiva de eventos relacionados con el cáncer podría conducir a una detección más temprana. Es importante corregir por este sesgo porque la variable "observación del tumor" actúa como un "colisionador"; es decir, una variable influenciada por dos factores (en este caso, tanto las mutaciones genéticas como las circunstancias externas favorecen la observación del tumor). Ignorar este aspecto puede generar sesgos, como predecir que ciertas mutaciones suprimen otras cuando en realidad no lo hacen, además de ocultar relaciones causales reales. Para abordar este problema, se emplean fórmulas tensoriales avanzadas que permiten calcular la función de verosimilitud del modelo \cite{OvercomingObservationBias}.
@@ -55,9 +40,6 @@ En este contexto, se distingue entre un modelo clásico (cMHN) y un modelo corre
 La matriz $\Theta$ captura la relación de interdependencia entre nodos (representando eventos), donde los riesgos de ciertos nodos afectan directamente a los riesgos de otros \cite{ModellingCancerProgression}. Así, la matriz describe las interdependencias y las intensidades de estas interacciones entre los eventos. Cada elemento $\Theta_{ij}$ representa el impacto directo del evento $j$ sobre el evento $i$ en términos del riesgo o probabilidad de un evento perjudicial. La diagonal representa los riesgos sin considerar interdependencias.
 
 El nuevo modelo oMHN incorpora explícitamente el evento de observación en la red causal como un evento adicional. Este evento se introduce como un nodo adicional ($n+1$) y su tasa base se fija en 1 para estandarizar la escala temporal. Además, se introduce un parametro adicional que permite modelar cómo los eventos genéticos afectan la probabilidad de observar el tumor. En este modelo, una vez que ocurre el evento de observación, todos lo eventos genéticos restantes "se congelan" (sus tasas se multiplican por 0), reflejando que no se observan más eventos genéticos después de la detección. A diferencia del modelo cMHN, el modelo oMHN divide los estados en dos subconjuntos: antes y después de la observación. La matriz $Q$ se amplía para combinar los parámetros $\Theta$ y $\Omega$, donde $\Omega$ captura cómo los eventos genéticos influyen en la tasa de observación. Sin embargo, la introducción de este nuevo parámetro genera un problema de la no identificabilidad, que se aborda mediante una regularización simétrica controlada por el hiperparámetro $\lambda$ (lambda) \cite{Schill2024}.
-
-%Limitación de MHN --> no puede trbaajr con interacción de más de tres??
-%Algunas de las preguntas que el modelo MHN intenta resultar son: ¿En qué orden suelen ocurrir las mutaciones?¿Qué tan rápido ocurren?¿Cómo influyen las mutaciones entre sí?¿Cómo afecta todo esto al momento en que observamos el tumor?
 
 Estos modelos trabajan con datos transversales, es decir, diferentes sujetos son tomados en tiempos diferentes (independientes). Estos datos se recogen en una matriz binaria en la cual las filas representan pacientes o sujetos y las columnas genes/SNPs/etc. Cada celda puede contener un 1 si el evento, alteración o mutación está presente o un 0 si no fue observado \cite{EvamtoolsMethods}. Algunos modelos pueden trabajar también con datos filogenéticos o datos longitudinales.
 
@@ -84,11 +66,6 @@ En el artículo \cite{Schill2024}, los autores recomiendan elegir la penalizaci�
 El siguiente paso es la elección de hiperparámetros de validación cruzada. Se prueba un rango de diferentes penalizaciones («lambdas») para identificar una que produzca un rendimiento óptimo en los datos retenidos. Se pueden definir los siguientes hiperparámetros: la intensidad mínima y máxima de la penalización («lambda») que se probará (usualmente se espera un lambda de $1/n$, siendo n el número de observaciones, por lo que se escogen un mínimo y máximo alrededor de ese valor), la cantidad de pasos (es decir, la longitud de la secuencia lambda) que hay que dar entre estos límites y la cantidad de folds en que se quieren dividir los datos para la validación cruzada. Se consigue alta precisión probando con un gran rango lambda con pequeños tamaños de paso y utilizando muchos folds, pero requiere más recursos informáticos y más tiempo de computación. Por el contrario, los resultados más rápidos utilizan un rango más estrecho, menos pasos y menos folds, reduciendo el cálculo y sacrificando la precisión a la hora de encontrar la lambda óptima. En el módulo, todo esto se puede especificar en la función \code{lambda\_from\_cv()}.
 
 El último paso es entrenar el modelo final con el lambda óptimo obtenido de la validación cruzada. Esto se consigue con \code{train()}, y los resultados se pueden guardar en formato csv y un fichero log en formato json con \code{result.save()}. El output principal se puede visualizar con \code{result.plot()}, mostrando la matriz $\Theta$ logarítmica de forma predeterminada. 
-
-%Preguntas clave:
-%¿Qué datos requieren? ¿En qué formato están las entradas/salidas?
-%¿Cómo funciona el sesgo de corrección en la práctica?
-
 
 \subsubsection{Web app: evamtools}
 La web app de evamtools se encuentra en \href{https://www.iib.uam.es/evamtools/}{https://www.iib.uam.es/evamtools/}, facilitando estudiar la acumulación de eventos en línea. Proporciona una interfaz gráfica al paquete de R, permitiendo al usuario una rápida construcción, manipulación y exploración de los modelos CPM.
@@ -254,10 +231,6 @@ Tras ello, se comprueba que, efectivamente, el resultado es el mismo con ambas h
 
 
 \subsection{Modificar evamtools para incluir la corrección del sesgo}
-%Dentro de \code{evamtools}, el modelo cMHN se encuentra codificado en el fichero \code{MHN\_\_ModelConstruction.R}, estando relacionado con la construcción y manipulación de la matriz de transición ($Q$) basada en los parámetros de $\Theta$. 
-
-%Para poder incluir oMHN en \code{evamtools}, primero se debe agregar el evento de observación en la matriz $\Theta$. Para ello, se debe modificar la función \code{Random.Theta} para agregar una fila y una columna adicionales que representen el evento de observación y ajustar los valores iniciales para que el evento de observación tenga parámetros razonables en la matriz.
-
 Para llevar a cabo la implementación de la correción del sesgo es necesaria la integración de varios pasos. El primero de todos es leer el código correspondiente a MHN de \code{evamtools} para poder identificar los puntos donde se podría insertar la lógica de corrección, además de consultar el código del módulo \code{mhn}, donde ya está presente esta corrección del sesgo.
 
 Dentro de \code{evamtools}, existen varios ficheros potenciales en los que incluirla:
@@ -509,6 +482,17 @@ Este trabajo ha permitido explorar en profundidad el uso de modelos MHN en el co
 \end{enumerate}
 
 En conclusión, este análisis refuerza la utilidad de MHN como herramienta en la investigación oncológica y filogenética y sugiere que la combinación de las capacidades de Python y R puede proporcionar un entorno potente y flexible para futuros desarrollos y aplicaciones en este campo. 
+
+\section{Preguntas sobre la presentación y sus respuestas}
+\begin{enumerate}
+\item \textit{¿Es lambda algo tan importante en relación con el resto del trabajo?} El cálculo de un lambda óptimo basado en los datos sí hace que el modelo generado sea más preciso que uno predeterminado. No obstante, es un aspecto secundario en el trabajo global, ya que el cálculo predeterminado es un buen ajuste general a todos los datos y lo más importante es la inclusión de la corrección del sesgo por observación.
+\item \textit{¿Afecta el número de observaciones al tiempo de ejecución de oMHN en Python? ¿Y de cMHN?} Un mayor número de observaciones conlleva un mayor tiempo de ejecución de ambos modelos, pero la diferencia es prácticamente mínima, siendo del orden de un par de segundos. En el fichero \code{MHN\_tiempos\_unif.pdf} se pueden ver todos los tiempos medidos en los distintos ordenadores. 
+\item \textit{¿Qué pasa si se fija lambda? ¿Es realmente importante hacer CV de lambda?} Si se fija lambda, se obtiene un modelo más fijo o genérico aplicable a todos los datos. Si se calcula el lambda óptimo, el modelo está algo más adaptado a los datos de entrada. En cualquier caso, la tendencia del modelo es igual en ambas situaciones, es decir, la tendencia de si una mutación inhibe o favorece a otra se mantiene.
+\item \textit{¿Se puede comparar lambda en R usando CV?} En \code{evamtools} no hay ninguna función que permita realizar cross-validation, por lo que no se podría generar un valor de lambda. Se puede explorar la disponibilidad de otros paquetes de R que permitan realizarlo para obtener ese valor, como puede ser \code{glmnet}. 
+\item \textit{¿En qué difiere sample artificial data?} En \code{sample\_evam}, se puede especificar el número de muestras a generar, el modelo de progresión de cáncer a utilizar y la salida deseada, pudiendo ser \code{sampled\_genotype\_counts}, \code{obs\_genotype\_transitions} y/o \code{state\_counts}. En el caso de \code{sample\_artificial\_data} en Python, solo permite especificar el número de muestras a generar. Además, se trata de un método del propio optimizador, no una función aislada como es en R.
+\item \textit{¿Qué hace la probabilidad del siguiente genotipo?} Entendemos que te refieres a la función de Python de \code{compute\_next\_events\_probs}. En el módulo de \code{mhn}, se ha implementado una función para que, para un estado dado, devuelva la probabilidad de todos los eventos posibles futuros. 
+\item \textit{¿La implementación realizada ha sido como C o como R?} Es verdad que las dos librerías utilizan código en C como base para las funciones principales. Concretamente el módulo \code{mhn} utiliza un lenguaje denominado como "Cython" (presentes en los ficheros \code{likelihood\_cmhn.pyx}, \code{likelihood\_cmhn.pxd}, \code{state\_containers.pxd}, \code{state\_containers.pyx}, \code{utilities.pyx}) para mejorar el rendimiento, flexibilidad, escalabilidad y velocidad. No obstante, nosotros nos hemos centrado en el código escrito en R de \code{evamtools} para la implementación de oMHN, reescribiendo las funciones que ya estaban en R, sin tocar C.  
+\end{enumerate}
 
 \printbibliography[heading=subbibintoc]
 
